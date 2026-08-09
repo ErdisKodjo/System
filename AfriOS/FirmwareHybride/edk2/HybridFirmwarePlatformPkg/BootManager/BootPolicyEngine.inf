@@ -1,0 +1,31 @@
+## @file
+# Boot Policy Engine INF file.
+#
+# Copyright (c) 2026, AfriOS. All rights reserved.
+##
+
+[Defines]
+  INF_VERSION                    = 0x00010005
+  BASE_NAME                      = BootPolicyEngine
+  FILE_GUID                      = D4E5F6A7-B8C9-4D0E-1F2A-3B4C5D6E7F8A
+  MODULE_TYPE                    = DXE_DRIVER
+  VERSION_STRING                 = 1.0
+  ENTRY_POINT                    = BootPolicyEngineEntryPoint
+
+[Sources]
+  BootPolicyEngine.c
+
+[Packages]
+  MdePkg/MdePkg.dec
+  MdeModulePkg/MdeModulePkg.dec
+  HybridFirmwarePlatformPkg/HybridFirmwarePlatformPkg.dec
+
+[LibraryClasses]
+  UefiDriverEntryPoint
+  UefiBootServicesTableLib
+  UefiLib
+  DebugLib
+  PcdLib
+
+[Depex]
+  TRUE

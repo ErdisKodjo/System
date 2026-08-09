@@ -1,0 +1,46 @@
+/** @file
+  Visual Forms Representation (VFR) for Hybrid Firmware Setup.
+
+  Copyright (c) 2026, AfriOS. All rights reserved.
+**/
+
+#include "UefiHiiUtils.h" // Hypothetical header for GUIDs
+
+formset
+  guid     = { 0xA1B2C3D4, 0xE5F6, 0x4A5B, { 0x9C, 0x8D, 0x7E, 0x6F, 0x5A, 0x4B, 0x3C, 0x2D } },
+  title    = STRING_TOKEN(STR_MAIN_TITLE),
+  help     = STRING_TOKEN(STR_MAIN_HELP),
+
+  // Main Form
+  form formid = 1,
+    title  = STRING_TOKEN(STR_MAIN_TITLE);
+
+    subtitle text = STRING_TOKEN(STR_MAIN_TAB);
+
+    // Solar Mode Toggle
+    checkbox varid = HybridConfig.SolarMode,
+      prompt   = STRING_TOKEN(STR_SOLAR_MODE_PROMPT),
+      help     = STRING_TOKEN(STR_SOLAR_MODE_HELP),
+      flags    = CHECKBOX_DEFAULT,
+      key      = 0x1000,
+    endcheckbox;
+
+    // Boot Order Placeholder
+    text
+      help   = STRING_TOKEN(STR_BOOT_ORDER_HELP),
+      text   = STRING_TOKEN(STR_BOOT_ORDER_PROMPT),
+    endtext;
+
+    spacer;
+
+    // Exit Options
+    text
+      help   = STRING_TOKEN(STR_SAVE_EXIT),
+      text   = STRING_TOKEN(STR_SAVE_EXIT),
+      flags  = INTERACTIVE,
+      key    = 0x2000,
+    endtext;
+
+  endform;
+
+endformset;

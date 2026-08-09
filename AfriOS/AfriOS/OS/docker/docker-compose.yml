@@ -1,0 +1,16 @@
+version: '3.8'
+
+services:
+  afrios-builder:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    volumes:
+      - ..:/workspace
+    working_dir: /workspace
+    container_name: afrios-builder
+    tty: true
+    stdin_open: true
+    environment:
+      - CMAKE_BUILD_TYPE=Debug
+    command: /bin/bash

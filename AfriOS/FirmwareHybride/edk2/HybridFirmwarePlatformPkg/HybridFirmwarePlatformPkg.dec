@@ -1,0 +1,71 @@
+## @file
+# Hybrid Firmware Platform Package Declaration
+#
+# This package provides the foundational modules and headers for the Hybrid Firmware.
+#
+# Copyright (c) 2026, AfriOS. All rights reserved.
+##
+
+[Defines]
+  DEC_SPECIFICATION              = 0x00010005
+  PACKAGE_NAME                   = HybridFirmwarePlatformPkg
+  PACKAGE_GUID                   = 2B3A1C0E-9F4D-4E7B-A8C5-D3F2B1A0E9C8
+  PACKAGE_VERSION                = 0.1
+
+[Includes]
+  Include
+
+[LibraryClasses]
+  ##  @libraryclass  Provides CPU-specific HAL operations.
+  # NOTE (étape 3) : pointait vers Include/Library/CpuHalLib.h, un fichier qui
+  # n'a jamais existé dans ce dépôt (pas de dossier Include/ sous ce package) —
+  # corrigé pour pointer vers le header réel.
+  CpuHalLib|HardwareAbstractionLayer/CpuHal/CpuHal.h
+
+  ##  @libraryclass  Detects which firmware description backend (Device Tree,
+  ##                  ACPI, or a generic fixed-register fallback) this platform
+  ##                  should use.
+  PlatformDetectLib|HardwareAbstractionLayer/PlatformDetect/PlatformDetectLib.h
+
+[Guids]
+  gHybridFirmwarePlatformPkgTokenSpaceGuid = { 0x5a1e7d0f, 0x4b2c, 0x4f8d, { 0x8e, 0x9a, 0x1d, 0x2b, 0x3c, 0x4d, 0x5e, 0x6f } }
+
+  ## Configuration table GUID under which FdtPlatformDxe installs the Device
+  ## Tree blob (EmbeddedPkg's gFdtTableGuid isn't vendored in this workspace,
+  ## see docs/architecture_overview.md — dépendance externe manquante).
+  gHybridFirmwareFdtTableGuid = { 0x9e5c1a2b, 0x7d3f, 0x4a6e, { 0xb1, 0xc8, 0x2f, 0x4d, 0x6a, 0x8b, 0x0c, 0x1e } }
+
+  ## HOB GUID (étape 4) : PlatformInfoPei publie l'adresse du blob FDT sous
+  ## ce GUID ; FdtPlatformDxe la relit via GetFirstGuidHob. Distinct de
+  ## gHybridFirmwareFdtTableGuid (qui identifie la table de configuration
+  ## UEFI finale, une fois le blob installé).
+  gHybridFirmwareFdtBlobHobGuid = { 0x1c4d8a3e, 0x6b2f, 0x4e91, { 0xa7, 0xd5, 0x3e, 0x9c, 0x1f, 0x0b, 0x2a, 0x4d } }
+
+[PcdsFixedAtBuild]
+  # 0=AC, 1=Battery, 2=Solar
+  gHybridFirmwarePlatformPkgTokenSpaceGuid.PcdPowerSourceType|0|UINT8|0x00000001
+  
+  # Solar efficiency threshold (0-100)
+  gHybridFirmwarePlatformPkgTokenSpaceGuid.PcdSolarEfficiencyThreshold|80|UINT8|0x00000002
+  
+  # Bitmask for enabled architectures: Bit0=x64, Bit1=AARCH64, Bit2=RISCV64
+  gHybridFirmwarePlatformPkgTokenSpaceGuid.PcdMultiArchSupport|0x07|UINT8|0x00000003
+
+  # PlatformDetectLib (étape 3) : force le backend Device Tree même sur une
+  # architecture PC-class (X64/IA32) qui utiliserait ACPI par défaut.
+  gHybridFirmwarePlatformPkgTokenSpaceGuid.PcdPreferDeviceTree|FALSE|BOOLEAN|0x00000004
+
+  # PlatformDetectLib (étape 3) : repli générique — force le backend
+  # "registre fixe" quelle que soit l'architecture (cible MCU/bare-metal sans
+  # ACPI ni Device Tree).
+  gHybridFirmwarePlatformPkgTokenSpaceGuid.PcdPlatformHasNoFirmwareTables|FALSE|BOOLEAN|0x00000005
+
+  # Adresse du blob Device Tree fourni par le bootloader précédent (étape 4).
+  # 0 = non configuré pour cette carte : FdtPlatformDxe échoue proprement
+  # (EFI_NOT_FOUND) plutôt que d'installer une table invalide. Une carte
+  # réelle utilisant le backend DeviceTree DOIT surcharger cette valeur dans
+  # son propre .dsc de plateforme.
+  gHybridFirmwarePlatformPkgTokenSpaceGuid.PcdFdtBaseAddress|0x0|UINT64|0x00000006
+
+[Protocols]
+  # Add custom protocols here if needed

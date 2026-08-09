@@ -1,0 +1,25 @@
+## @file
+# Measured Boot Library INF file.
+#
+# Copyright (c) 2026, AfriOS. All rights reserved.
+##
+
+[Defines]
+  INF_VERSION                    = 0x00010005
+  BASE_NAME                      = MeasuredBootLib
+  FILE_GUID                      = F1A2B3C4-D5E6-4F7A-8B9C-0D1E2F3A4B5C
+  MODULE_TYPE                    = BASE
+  VERSION_STRING                 = 1.0
+  LIBRARY_CLASS                  = MeasuredBootLib
+
+[Sources]
+  MeasuredBootLib.c
+
+[Packages]
+  MdePkg/MdePkg.dec
+  HybridFirmwarePlatformPkg/HybridFirmwarePlatformPkg.dec
+
+[LibraryClasses]
+  BaseLib
+  DebugLib
+  BaseMemoryLib

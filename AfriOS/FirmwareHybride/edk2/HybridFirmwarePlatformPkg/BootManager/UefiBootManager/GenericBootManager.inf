@@ -1,0 +1,31 @@
+## @file
+# Generic UEFI Boot Manager INF file.
+#
+# Copyright (c) 2026, AfriOS. All rights reserved.
+##
+
+[Defines]
+  INF_VERSION                    = 0x00010005
+  BASE_NAME                      = GenericBootManager
+  FILE_GUID                      = A7B8C9D0-E1F2-4A3B-5C6D-7E8A9B0C1D2E
+  MODULE_TYPE                    = DXE_DRIVER
+  VERSION_STRING                 = 1.0
+  ENTRY_POINT                    = GenericBootManagerEntryPoint
+
+[Sources]
+  GenericBootManager.c
+
+[Packages]
+  MdePkg/MdePkg.dec
+  MdeModulePkg/MdeModulePkg.dec
+  HybridFirmwarePlatformPkg/HybridFirmwarePlatformPkg.dec
+
+[LibraryClasses]
+  UefiDriverEntryPoint
+  UefiBootServicesTableLib
+  UefiLib
+  DebugLib
+  DevicePathLib
+
+[Depex]
+  TRUE

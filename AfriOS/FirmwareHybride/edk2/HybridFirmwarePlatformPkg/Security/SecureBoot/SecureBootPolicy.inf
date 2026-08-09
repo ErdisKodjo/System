@@ -1,0 +1,37 @@
+## @file
+# Secure Boot Policy DXE Driver INF file.
+#
+# Copyright (c) 2026, AfriOS. All rights reserved.
+##
+
+[Defines]
+  INF_VERSION                    = 0x00010005
+  BASE_NAME                      = SecureBootPolicy
+  # Étape 4 : FILE_GUID corrigé — l'ancienne valeur (G1A2B3C4-...) contenait
+  # 'G', qui n'est pas un chiffre hexadécimal valide et aurait fait échouer
+  # le parsing BaseTools.
+  FILE_GUID                      = 4A1B2C3D-D5E6-4F7A-8B9C-0D1E2F3A4B5C
+  MODULE_TYPE                    = DXE_DRIVER
+  VERSION_STRING                 = 1.0
+  ENTRY_POINT                    = SecureBootPolicyEntryPoint
+
+[Sources]
+  SecureBootPolicy.c
+
+[Packages]
+  MdePkg/MdePkg.dec
+  MdeModulePkg/MdeModulePkg.dec
+  HybridFirmwarePlatformPkg/HybridFirmwarePlatformPkg.dec
+
+[LibraryClasses]
+  UefiDriverEntryPoint
+  UefiBootServicesTableLib
+  UefiRuntimeServicesTableLib
+  DebugLib
+
+[Guids]
+  gEfiGlobalVariableGuid                        ## CONSUMES
+  gEfiImageSecurityDatabaseGuid                 ## CONSUMES
+
+[Depex]
+  gEfiVariableArchProtocolGuid

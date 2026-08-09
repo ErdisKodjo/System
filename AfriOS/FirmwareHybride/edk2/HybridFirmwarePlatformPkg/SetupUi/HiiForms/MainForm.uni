@@ -1,0 +1,26 @@
+// /** @file
+// String definitions for Hybrid Firmware Setup.
+//
+// Copyright (c) 2026, AfriOS. All rights reserved.
+// **/
+
+#langdef en-US "English"
+
+#string STR_MAIN_TITLE                 #language en-US "Hybrid Firmware Setup"
+#string STR_MAIN_HELP                  #language en-US "Configure platform and boot settings."
+
+#string STR_MAIN_TAB                   #language en-US "Main"
+#string STR_ADVANCED_TAB               #language en-US "Advanced"
+#string STR_POWER_TAB                  #language en-US "Power"
+#string STR_BOOT_TAB                   #language en-US "Boot"
+
+#string STR_SOLAR_MODE_PROMPT          #language en-US "Solar Efficiency Mode"
+#string STR_SOLAR_MODE_HELP            #language en-US "Enable/Disable solar power optimization features."
+#string STR_ENABLED                    #language en-US "Enabled"
+#string STR_DISABLED                   #language en-US "Disabled"
+
+#string STR_BOOT_ORDER_PROMPT          #language en-US "Boot Order"
+#string STR_BOOT_ORDER_HELP            #language en-US "Configure the system boot priority."
+
+#string STR_SAVE_EXIT                  #language en-US "Save and Exit"
+#string STR_DISCARD_EXIT               #language en-US "Discard and Exit"

@@ -1,0 +1,34 @@
+## @file
+# Platform Initialization DXE Driver INF file.
+#
+# Copyright (c) 2026, AfriOS. All rights reserved.
+##
+
+[Defines]
+  INF_VERSION                    = 0x00010005
+  BASE_NAME                      = PlatformInitDxe
+  FILE_GUID                      = F6A7B8C9-D0E1-4F2A-3B4C-5D6E7F8A9B0C
+  MODULE_TYPE                    = DXE_DRIVER
+  VERSION_STRING                 = 1.0
+  ENTRY_POINT                    = PlatformInitDxeEntryPoint
+
+[Sources]
+  PlatformInitDxe.c
+
+[Packages]
+  MdePkg/MdePkg.dec
+  HybridFirmwarePlatformPkg/HybridFirmwarePlatformPkg.dec
+
+[LibraryClasses]
+  UefiDriverEntryPoint
+  UefiBootServicesTableLib
+  DebugLib
+  PcdLib
+  PlatformDetectLib
+
+[Pcd]
+  gHybridFirmwarePlatformPkgTokenSpaceGuid.PcdPreferDeviceTree
+  gHybridFirmwarePlatformPkgTokenSpaceGuid.PcdPlatformHasNoFirmwareTables
+
+[Depex]
+  TRUE

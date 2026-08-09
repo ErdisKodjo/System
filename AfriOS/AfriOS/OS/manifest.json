@@ -1,0 +1,87 @@
+{
+  "project": "AfriOS",
+  "version": "1.0.0",
+  "description": "Multi-platform OS runtime with unified execution engine",
+  "repositories": [
+    {
+      "name": "afros-androsandbox",
+      "type": "android_framework",
+      "description": "Android runtime and framework implementation",
+      "build_system": "soong",
+      "main_files": ["Android.bp"]
+    },
+    {
+      "name": "afros-core",
+      "type": "kernel",
+      "description": "Custom AfriOS kernel and HAL",
+      "build_system": "makefile",
+      "main_files": ["Makefile", "Kconfig"]
+    },
+    {
+      "name": "afros-corebridge-core",
+      "type": "runtime_manager",
+      "description": "Multi-platform runtime manager and intelligent loader",
+      "build_system": "cmake",
+      "main_files": ["CMakeLists.txt"]
+    },
+    {
+      "name": "afros-dxvk",
+      "type": "graphics",
+      "description": "GPU rendering with Vulkan backend",
+      "build_system": "meson",
+      "main_files": ["meson.build"]
+    },
+    {
+      "name": "afros-harmonygate",
+      "type": "harmony_compat",
+      "description": "HarmonyOS compatibility layer",
+      "build_system": "gn",
+      "main_files": ["BUILD.gn"]
+    },
+    {
+      "name": "afros-incompat-engine",
+      "type": "ios_compat",
+      "description": "iOS/macOS compatibility engine",
+      "build_system": "cmake",
+      "main_files": ["CMakeLists.txt"]
+    },
+    {
+      "name": "afros-winbridge",
+      "type": "windows_compat",
+      "description": "Windows application support via Wine",
+      "build_system": "autotools",
+      "main_files": ["configure.ac", "Makefile.in"]
+    }
+  ],
+  "dependencies": {
+    "global": [
+      "cmake >= 3.16",
+      "python >= 3.8",
+      "clang >= 12",
+      "git"
+    ],
+    "android": ["android-ndk", "android-sdk"],
+    "graphics": ["vulkan-sdk", "spirv-tools"],
+    "wine": ["autotools", "pkg-config"]
+  },
+  "supported_platforms": [
+    "Linux x86_64",
+    "Linux ARM64",
+    "Android ARM64",
+    "HarmonyOS x86_64",
+    "HarmonyOS ARM64",
+    "macOS x86_64",
+    "macOS ARM64",
+    "Windows 10/11 x64 (via Wine)"
+  ],
+  "build_targets": {
+    "all": "Build all components",
+    "android": "Build Android framework",
+    "kernel": "Build AfriOS kernel",
+    "runtime": "Build runtime manager",
+    "graphics": "Build graphics subsystem",
+    "compat_layers": "Build all compatibility layers",
+    "test": "Run test suite",
+    "clean": "Clean build artifacts"
+  }
+}

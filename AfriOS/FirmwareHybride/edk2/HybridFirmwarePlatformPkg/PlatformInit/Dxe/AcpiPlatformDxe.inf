@@ -1,0 +1,28 @@
+## @file
+# ACPI Platform DXE Driver INF file.
+#
+# Copyright (c) 2026, AfriOS. All rights reserved.
+##
+
+[Defines]
+  INF_VERSION                    = 0x00010005
+  BASE_NAME                      = AcpiPlatformDxe
+  FILE_GUID                      = 12345678-90AB-CDEF-1234-567890ABCDEF
+  MODULE_TYPE                    = DXE_DRIVER
+  VERSION_STRING                 = 1.0
+  ENTRY_POINT                    = AcpiPlatformEntryPoint
+
+[Sources]
+  AcpiPlatformDxe.c
+
+[Packages]
+  MdePkg/MdePkg.dec
+  HybridFirmwarePlatformPkg/HybridFirmwarePlatformPkg.dec
+
+[LibraryClasses]
+  UefiDriverEntryPoint
+  UefiBootServicesTableLib
+  DebugLib
+
+[Depex]
+  gEfiAcpiTableProtocolGuid

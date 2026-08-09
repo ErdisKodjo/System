@@ -1,0 +1,41 @@
+## @file
+# ACPI Table Generator DXE Driver INF file.
+#
+# Copyright (c) 2026, AfriOS. All rights reserved.
+##
+
+[Defines]
+  INF_VERSION                    = 0x00010005
+  BASE_NAME                      = AcpiTableGenerator
+  FILE_GUID                      = C3D4E5F6-A7B8-4C9D-0E1F-2A3B4C5D6E7F
+  MODULE_TYPE                    = DXE_DRIVER
+  VERSION_STRING                 = 1.0
+  ENTRY_POINT                    = AcpiTableGeneratorEntryPoint
+
+[Sources]
+  AcpiTableGenerator.c
+  AcpiTables/Fadt.c
+
+[Packages]
+  MdePkg/MdePkg.dec
+  MdeModulePkg/MdeModulePkg.dec
+  HybridFirmwarePlatformPkg/HybridFirmwarePlatformPkg.dec
+
+[LibraryClasses]
+  UefiDriverEntryPoint
+  UefiBootServicesTableLib
+  DebugLib
+  PcdLib
+  BaseMemoryLib
+  MemoryAllocationLib
+  PlatformDetectLib
+
+[Protocols]
+  gEfiAcpiTableProtocolGuid                     ## CONSUMES
+
+[Pcd]
+  gHybridFirmwarePlatformPkgTokenSpaceGuid.PcdPreferDeviceTree
+  gHybridFirmwarePlatformPkgTokenSpaceGuid.PcdPlatformHasNoFirmwareTables
+
+[Depex]
+  gEfiAcpiTableProtocolGuid

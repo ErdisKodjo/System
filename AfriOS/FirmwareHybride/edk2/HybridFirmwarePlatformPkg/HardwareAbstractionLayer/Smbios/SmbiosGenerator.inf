@@ -1,0 +1,36 @@
+## @file
+# SMBIOS Generator DXE Driver INF file.
+#
+# Copyright (c) 2026, AfriOS. All rights reserved.
+##
+
+[Defines]
+  INF_VERSION                    = 0x00010005
+  BASE_NAME                      = SmbiosGenerator
+  FILE_GUID                      = E1A2B3C4-D5E6-4F7A-8B9C-0D1E2F3A4B5C
+  MODULE_TYPE                    = DXE_DRIVER
+  VERSION_STRING                 = 1.0
+  ENTRY_POINT                    = SmbiosGeneratorEntryPoint
+
+[Sources]
+  SmbiosGenerator.c
+
+[Packages]
+  MdePkg/MdePkg.dec
+  MdeModulePkg/MdeModulePkg.dec
+  HybridFirmwarePlatformPkg/HybridFirmwarePlatformPkg.dec
+
+[LibraryClasses]
+  UefiDriverEntryPoint
+  UefiBootServicesTableLib
+  DebugLib
+  BaseLib
+  BaseMemoryLib
+  MemoryAllocationLib
+  PcdLib
+
+[Protocols]
+  gEfiSmbiosProtocolGuid                        ## CONSUMES
+
+[Depex]
+  gEfiSmbiosProtocolGuid

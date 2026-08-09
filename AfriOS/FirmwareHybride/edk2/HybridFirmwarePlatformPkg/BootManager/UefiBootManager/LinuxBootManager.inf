@@ -1,0 +1,31 @@
+## @file
+# Linux Boot Manager INF file.
+#
+# Copyright (c) 2026, AfriOS. All rights reserved.
+##
+
+[Defines]
+  INF_VERSION                    = 0x00010005
+  BASE_NAME                      = LinuxBootManager
+  FILE_GUID                      = FEDCBA98-7654-3210-FEDC-BA9876543210
+  MODULE_TYPE                    = DXE_DRIVER
+  VERSION_STRING                 = 1.0
+  ENTRY_POINT                    = LinuxBootManagerEntryPoint
+
+[Sources]
+  LinuxBootManager.c
+
+[Packages]
+  MdePkg/MdePkg.dec
+  MdeModulePkg/MdeModulePkg.dec
+  HybridFirmwarePlatformPkg/HybridFirmwarePlatformPkg.dec
+
+[LibraryClasses]
+  UefiDriverEntryPoint
+  UefiBootServicesTableLib
+  UefiLib
+  DebugLib
+  PcdLib
+
+[Depex]
+  TRUE

@@ -1,0 +1,37 @@
+## @file
+# Platform Information PEI Module INF file.
+#
+# Copyright (c) 2026, AfriOS. All rights reserved.
+##
+
+[Defines]
+  INF_VERSION                    = 0x00010005
+  BASE_NAME                      = PlatformInfoPei
+  FILE_GUID                      = B2C3D4E5-F6A7-4B5C-8D9E-0F1A2B3C4D5E
+  MODULE_TYPE                    = PEIM
+  VERSION_STRING                 = 1.0
+  ENTRY_POINT                    = PlatformInfoPeiEntryPoint
+
+[Sources]
+  PlatformInfoPei.c
+
+[Packages]
+  MdePkg/MdePkg.dec
+  HybridFirmwarePlatformPkg/HybridFirmwarePlatformPkg.dec
+
+[LibraryClasses]
+  PeimEntryPoint
+  PeiServicesLib
+  DebugLib
+  PcdLib
+  HobLib
+
+[Guids]
+  gHybridFirmwareFdtBlobHobGuid                 ## PRODUCES
+
+[Pcd]
+  gHybridFirmwarePlatformPkgTokenSpaceGuid.PcdPowerSourceType
+  gHybridFirmwarePlatformPkgTokenSpaceGuid.PcdFdtBaseAddress
+
+[Depex]
+  TRUE
