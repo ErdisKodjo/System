@@ -1,5 +1,4 @@
 #include "afros_hal.h"
-#include <stdio.h>
 
 /**
  * @file afros_pci.c
@@ -13,7 +12,7 @@
 
 static afros_status_t pci_dev_init(uint32_t device_id) {
     (void)device_id;
-    printf("PCI: Initializing PCI bus...\n");
+    // Initializing PCI bus
     return AFROS_SUCCESS;
 }
 
@@ -38,6 +37,5 @@ void pci_init(void) {
 }
 
 void pci_scan_bus(void) {
-    printf("PCI: Scanning PCI bus for devices...\n");
     // Enumerate and register PCI devices found on the bus
 }

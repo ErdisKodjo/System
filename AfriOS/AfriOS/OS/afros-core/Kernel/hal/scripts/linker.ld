@@ -1,45 +1,53 @@
-/* Script de liaison (Linker Script) pour AfriOS Core ARM64 */
-ENTRY(kernel_main)
+/* Linker Script for AfriOS Core x86_64 Bare-Metal */
+ENTRY(_start)
 
 MEMORY
 {
-    /* Définition des segments de mémoire */
-    FLASH (rx) : ORIGIN = 0x40000000, LENGTH = 2M   /* Zone du noyau */
-    RAM (rwx)  : ORIGIN = 0x80000000, LENGTH = 128M /* Zone de données */
+    /* Physical memory identity-mapped for bare-metal kernel */
+    RAM (rwx) : ORIGIN = 0x00100000, LENGTH = 128M /* Kernel loaded at 1MB */
 }
 
 SECTIONS
 {
-    /* Segment de code (Text) */
-    .text : {
-        KEEP(*( .vector_table ))
+    /* Boot and code segment */
+    .text.boot : {
+        *(.text.boot)
         *(.text)
         *(.text.*)
-    } > FLASH
+    } > RAM
 
-    /* Segment de données constantes (Read-only) */
+    /* Read-only data segment */
     .rodata : {
         *(.rodata)
         *(.rodata.*)
-    } > FLASH
+    } > RAM
 
-    /* Segment de données initialisées (Data) */
+    /* Initialized data segment - load address = runtime address */
     .data : {
+        _data_start = .;
+        _data_load_start = .;
         *(.data)
         *(.data.*)
-    } > RAM AT > FLASH
+        _data_end = .;
+    } > RAM
 
-    /* Segment de données non initialisées (BSS) */
+    /* Uninitialized data segment (BSS) */
     .bss : {
+        _bss_start = .;
         *(.bss)
         *(.bss.*)
         *(COMMON)
+        _bss_end = .;
     } > RAM
 
-    /* Pile du noyau (Stack) */
+    /* Kernel stack - 16 KB */
     .stack (NOLOAD) : {
         . = ALIGN(16);
-        . = . + 0x4000; /* Pile de 16 KB */
+        _kernel_stack = .;
+        . = . + 0x4000;
         _kernel_stack_top = .;
     } > RAM
+
+    /* End symbols */
+    _end = .;
 }

@@ -1,7 +1,7 @@
 #ifndef AFROS_POWER_MANAGER_H
 #define AFROS_POWER_MANAGER_H
 
-#include "../../afros-core/Kernel/hal/include/afros_types.h"
+#include "afros_types.h"
 
 /**
  * @file power_manager.h

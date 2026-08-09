@@ -22,17 +22,16 @@ static afros_status_t device_manager_register_impl(device_ops_t *ops) {
 
     for (uint32_t i = 0; i < s_device_count; i++) {
         if (s_devices[i]->device_id == ops->device_id) {
-            printf("[DEVMGR] device_id=%u deja enregistre, refus.\n", ops->device_id);
+            // Device already registered, refuse
             return AFROS_ERROR;
         }
     }
     if (s_device_count >= AFROS_MAX_DEVICES) {
-        printf("[DEVMGR] Registre plein (%u peripheriques max).\n", AFROS_MAX_DEVICES);
+        // Registry full
         return AFROS_ERROR_NO_MEMORY;
     }
 
     s_devices[s_device_count++] = ops;
-    printf("[DEVMGR] Peripherique '%s' (id=%u) enregistre.\n", ops->name ? ops->name : "?", ops->device_id);
 
     if (ops->init) {
         return ops->init(ops->device_id);
@@ -43,8 +42,7 @@ static afros_status_t device_manager_register_impl(device_ops_t *ops) {
 static afros_status_t device_manager_unregister_impl(uint32_t device_id) {
     for (uint32_t i = 0; i < s_device_count; i++) {
         if (s_devices[i]->device_id == device_id) {
-            printf("[DEVMGR] Peripherique id=%u retire.\n", device_id);
-            // Retrait en O(1) : on écrase avec le dernier élément (ordre non garanti).
+            // Device removed
             s_devices[i] = s_devices[s_device_count - 1];
             s_device_count--;
             return AFROS_SUCCESS;
