@@ -1,0 +1,12 @@
+{
+    "name": "uikit-window",
+    "description": "UIWindow: alloc + initWithFrame + makeKeyAndVisible sans crash",
+    "binary": "uikit-window",
+    "expected_output": "Hello, AfriOS!",
+    "timeout_ms": 10000,
+    "scoring": {
+        "stdout_match": 50,
+        "exit_code_zero": 30,
+        "completes_under_timeout": 20
+    }
+}

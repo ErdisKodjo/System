@@ -1,6 +1,13 @@
 #include "afros_hal.h"
 #include "kprintf.h"
 
+/* afros_net_send() est exposée par afros-network (target_link_libraries
+ * afros-kernel → afros-network). En mode host, elle délègue aux BSD sockets.
+ * En freestanding, retourne AFROS_ERROR_NOT_SUPPORTED — on garde alors le
+ * mode "simulé" (send_ok = true) pour ne pas casser le flow DTN en kernel
+ * bare-metal tant qu'aucun driver réseau n'est branché. */
+#include "afros_net.h"
+
 /**
  * @file intermittent_net.c
  * @brief Couche réseau tolérante aux coupures fréquentes (Store-and-Forward
@@ -24,6 +31,9 @@
  *                                   la pile IP quand la route est down).
  *   - `dtn_link_up()` / `dtn_link_down()` : signaux de la couche liaison.
  *   - `dtn_flush()`               : force le rejeu immédiat de la file.
+ *   - `dtn_set_egress_endpoint()` : configure le next-hop où rejouer les
+ *                                   paquets (étape P2 — branchement sur
+ *                                   afros_net_send()).
  */
 
 #define DTN_MAX_QUEUE         1024
@@ -51,6 +61,16 @@ static volatile uint32_t g_tail = 0;
 static volatile bool g_link_up = false;
 static volatile bool g_initialized = false;
 
+/*
+ * Endpoint de sortie (next-hop) pour le rejeu des paquets DTN.
+ * Par défaut : zéro (pas d'endpoint configuré). Le caller (typiquement la
+ * pile IP, après résolution de route) doit appeler dtn_set_egress_endpoint()
+ * avant le premier dtn_flush(). Sans endpoint, dtn_flush() reste en mode
+ * "simulé" (send_ok = true) — utile pour les tests unitaires.
+ */
+static afros_net_endpoint_t g_egress_ep;
+static volatile bool g_egress_configured = false;
+
 /* Forward declaration — `dtn_link_up` calls `dtn_flush` which is defined
  * further down in this file. */
 void dtn_flush(void);
@@ -65,8 +85,40 @@ void dtn_init(void) {
     g_head = g_tail = 0;
     g_link_up = false;
     g_initialized = true;
+    g_egress_configured = false;
+    /* Zero-fill de l'endpoint sans dépendre de memset (le kernel freestanding
+     * n'a pas toujours <string.h> — voir kprintf.c pour la même approche). */
+    {
+        uint8_t *p = (uint8_t *)&g_egress_ep;
+        for (size_t i = 0; i < sizeof(g_egress_ep); i++) p[i] = 0;
+    }
     kprintf("[DTN] Couche DTN initialisée (file=%u paquets, backoff initial=%u ms).\n",
             DTN_MAX_QUEUE, DTN_BACKOFF_INIT_MS);
+}
+
+/**
+ * Configure l'endpoint de sortie utilisé par dtn_flush() pour rejouer les
+ * paquets via afros_net_send(). Doit être appelé après dtn_init() et avant
+ * le premier dtn_link_up(). Peut être rappelé pour reconfigurer (par
+ * exemple après un handover IP).
+ *
+ * @param ep Endpoint (next-hop) où envoyer les paquets. Copié dans une
+ *           variable statique — le caller peut libérer son instance.
+ */
+void dtn_set_egress_endpoint(const afros_net_endpoint_t *ep) {
+    if (!ep) {
+        g_egress_configured = false;
+        {
+            uint8_t *p = (uint8_t *)&g_egress_ep;
+            for (size_t i = 0; i < sizeof(g_egress_ep); i++) p[i] = 0;
+        }
+        kprintf("[DTN] Endpoint de sortie effacé.\n");
+        return;
+    }
+    g_egress_ep = *ep;
+    g_egress_configured = true;
+    kprintf("[DTN] Endpoint de sortie configuré : proto=%d dst=0x%08x:%u.\n",
+            (int)ep->proto, ep->dst_ip, ep->dst_port);
 }
 
 /**
@@ -149,8 +201,12 @@ void dtn_link_down(void) {
  * pour ce paquet. S'arrête après `DTN_FLUSH_BATCH` paquets pour ne pas
  * monopoliser le CPU.
  *
- * TODO: brancher sur la vraie pile IP via `afros_net_send()` une fois
- * que la couche afros-network expose une fonction d'envoi synchrone.
+ * Étape P2 : branchement sur afros_net_send(). Si aucun endpoint de sortie
+ * n'est configuré (g_egress_configured = false), ou si afros_net_send
+ * retourne AFROS_ERROR_NOT_SUPPORTED (build freestanding sans driver réseau),
+ * on reste en mode "simulé" (send_ok = true) — la file se vide comme si
+ * l'envoi avait réussi, ce qui évite de bloquer indéfiniment le thread de
+ * purge en l'absence de pile réseau.
  */
 void dtn_flush(void) {
     if (!g_initialized || !g_link_up) return;
@@ -161,11 +217,41 @@ void dtn_flush(void) {
         uint32_t backoff_ms = DTN_BACKOFF_INIT_MS << slot->retry_count;
         if (backoff_ms > DTN_BACKOFF_MAX_MS) backoff_ms = DTN_BACKOFF_MAX_MS;
 
-        /* TODO: appel réel à afros_net_send(slot->data, slot->len); */
-        bool send_ok = true;  /* simulé pour l'instant */
+        bool send_ok = false;
+        bool simulated = false;
+
+        if (!g_egress_configured) {
+            /* Pas d'endpoint configuré : mode simulé (tests unitaires,
+             * boot pré-réseau, ou caller qui ne veut pas vraiment émettre). */
+            simulated = true;
+            send_ok = true;
+        } else {
+            /* Appel réel à afros_net_send(). En mode host, délègue aux
+             * BSD sockets. En freestanding, retourne NOT_SUPPORTED — on
+             * bascule alors en mode simulé pour ne pas bloquer la file. */
+            afros_status_t s = afros_net_send(&g_egress_ep, slot->data, slot->len);
+            switch (s) {
+                case AFROS_SUCCESS:
+                    send_ok = true;
+                    break;
+                case AFROS_ERROR_NOT_SUPPORTED:
+                    /* Freestanding sans driver réseau — mode simulé. */
+                    simulated = true;
+                    send_ok = true;
+                    break;
+                default:
+                    send_ok = false;
+                    kprintf("[DTN] afros_net_send échec (statut=%u), retry=%u.\n",
+                            s, slot->retry_count + 1);
+                    break;
+            }
+        }
 
         if (send_ok) {
-            if (slot->prio == DTN_PRIO_CRITICAL) {
+            if (simulated && slot->prio == DTN_PRIO_CRITICAL) {
+                kprintf("[DTN] Paquet CRITIQUE acquitté (mode simulé) après %u tentative(s).\n",
+                        slot->retry_count + 1);
+            } else if (slot->prio == DTN_PRIO_CRITICAL) {
                 kprintf("[DTN] Paquet CRITIQUE acquitté après %u tentative(s).\n",
                         slot->retry_count + 1);
             }

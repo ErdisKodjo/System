@@ -1,0 +1,14 @@
+{
+    "name": "binder-roundtrip",
+    "description": "IPC Binder: service exporte IBinder, client transact() et vérifie réponse",
+    "binary": "binder-client.dex",
+    "expected_output": "Hello, AfriOS!",
+    "timeout_ms": 15000,
+    "scoring": {
+        "stdout_match": 50,
+        "exit_code_zero": 30,
+        "completes_under_timeout": 20
+    },
+    "entry_class": "com.afrios.BinderClient",
+    "extra_services": ["binder-service.dex:com.afrios.BinderService"]
+}

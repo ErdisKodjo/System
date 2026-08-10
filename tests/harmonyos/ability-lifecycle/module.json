@@ -1,0 +1,19 @@
+{
+    "app": {
+        "bundleName": "com.afrios.lifecycle",
+        "versionCode": 1,
+        "versionName": "1.0.0"
+    },
+    "module": {
+        "name": "entry",
+        "type": "entry",
+        "deviceTypes": ["default"],
+        "abilities": [
+            {
+                "name": "LifecycleAbility",
+                "srcEntrance": "./abilities/LifecycleAbility.js",
+                "visible": true
+            }
+        ]
+    }
+}

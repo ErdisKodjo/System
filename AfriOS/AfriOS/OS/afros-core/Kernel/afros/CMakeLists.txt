@@ -43,6 +43,16 @@ target_include_directories(afros-kernel PUBLIC
 
 target_link_libraries(afros-kernel PUBLIC afros-hal)
 
+# Étape P2 : afros-kernel consomme afros_net_send() exposée par afros-network
+# (intermittent_net.c → afros_net_send pour le rejeu de la file DTN). Le
+# target afros-network est créé AVANT afros-core/Kernel dans le CMakeLists
+# racine (afros-network est un "leaf" qui ne dépend que de afros-hal, via
+# le repli include-dir si afros-hal n'existe pas encore à ce point).
+# On ne link que si afros-network a bien été défini (build partiel).
+if(TARGET afros-network)
+    target_link_libraries(afros-kernel PUBLIC afros-network)
+endif()
+
 # Simulateur hébergé (mode actuel : affichage via kprintf -> libc vprintf en
 # build non-freestanding, tourne en espace
 # utilisateur). Formalise ce que faisait déjà `afros-core/Makefile` — reste

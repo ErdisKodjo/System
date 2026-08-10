@@ -1,0 +1,12 @@
+{
+    "name": "fork-exec",
+    "description": "fork + execve(/bin/echo) + waitpid — syscalls Unix de base",
+    "binary": "fork-exec",
+    "expected_output": "Hello, AfriOS!",
+    "timeout_ms": 5000,
+    "scoring": {
+        "stdout_match": 50,
+        "exit_code_zero": 30,
+        "completes_under_timeout": 20
+    }
+}

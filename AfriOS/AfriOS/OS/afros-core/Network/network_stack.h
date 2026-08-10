@@ -17,6 +17,7 @@
 
 #include <stdint.h>
 #include <stdbool.h>
+#include <sys/types.h>   /* ssize_t — needed for network_send/network_recv prototypes */
 #include "afros_types.h"
 
 // ============================================================================

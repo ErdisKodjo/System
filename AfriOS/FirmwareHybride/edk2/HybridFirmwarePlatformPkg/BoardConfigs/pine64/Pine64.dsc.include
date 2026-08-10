@@ -1,0 +1,37 @@
+## @file
+# Board-specific overrides for Pine64 A64 (ARM64, Cortex-A53).
+#
+# This file is included by HybridFirmwarePlatformPkg.dsc when BOARD_CONFIG=Pine64.
+# It overrides PcdFdtBaseAddress to the address where U-Boot loads the Device
+# Tree Blob for the Pine64 A64 board.
+#
+# Pine64 A64 specifics:
+#   - SoC        : Allwinner A64 (4x Cortex-A53 @ 1.15 GHz)
+#   - RAM        : 512 MB / 1 GB / 2 GB depending on SKU
+#   - FDT base   : 0x40000000 (U-Boot convention for Allwinner boards)
+#   - Boot mode  : SD card, SPI flash (on later revisions), eMMC optional
+#   - ACPI       : NOT available (Device Tree is the only description backend)
+#
+# Build:
+#   build -p HybridFirmwarePlatformPkg.dsc -a AARCH64 -t GCC5 \
+#          -D BOARD_CONFIG=Pine64
+#
+# Copyright (c) 2026, AfriOS. All rights reserved.
+##
+
+[Defines]
+  # Force the Device Tree backend — Pine64 A64 has no ACPI tables.
+  DEFINE PCD_PREFER_DEVICE_TREE_DEFAULT  = TRUE
+
+[PcdsFixedAtBuild]
+  # U-Boot charge le FDT à 0x40000000 sur Allwinner A64 (convention U-Boot
+  # pour les boards sun50i). Voir :
+  # https://docs.u-boot.org/en/latest/arch/arm64.html
+  gHybridFirmwarePlatformPkgTokenSpaceGuid.PcdFdtBaseAddress|0x40000000
+
+  # Pine64 A64 : pas de tables firmware ACPI, on force DeviceTree.
+  gHybridFirmwarePlatformPkgTokenSpaceGuid.PcdPreferDeviceTree|TRUE
+  gHybridFirmwarePlatformPkgTokenSpaceGuid.PcdPlatformHasNoFirmwareTables|FALSE
+
+  # Pine64 est typiquement alimenté par DC 5V (secteur via adaptateur USB-C).
+  gHybridFirmwarePlatformPkgTokenSpaceGuid.PcdPowerSourceType|0

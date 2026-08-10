@@ -1,0 +1,19 @@
+{
+    "app": {
+        "bundleName": "com.afrios.hello",
+        "versionCode": 1,
+        "versionName": "1.0.0"
+    },
+    "module": {
+        "name": "entry",
+        "type": "entry",
+        "deviceTypes": ["default"],
+        "abilities": [
+            {
+                "name": "HelloAbility",
+                "srcEntrance": "./abilities/HelloAbility.js",
+                "visible": true
+            }
+        ]
+    }
+}

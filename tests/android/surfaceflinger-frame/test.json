@@ -1,0 +1,14 @@
+{
+    "name": "surfaceflinger-frame",
+    "description": "Rendu frame: SurfaceView + Canvas.drawCircle + SurfaceFlinger",
+    "binary": "frame.dex",
+    "expected_output": "Hello, AfriOS!",
+    "timeout_ms": 15000,
+    "scoring": {
+        "stdout_match": 50,
+        "exit_code_zero": 30,
+        "completes_under_timeout": 20
+    },
+    "entry_class": "com.afrios.FrameActivity",
+    "expected_pixel": {"x": 50, "y": 50, "color": "#FF0000"}
+}

@@ -5,7 +5,8 @@
 
 #include "boot_manager.h"
 #include "../include/afros_types.h"
-#include "../HAL/include/afros_hal.h"
+#include "../hal/include/afros_hal.h"
+#include "../include/afros_log.h"   /* afros_log_info/warning/error */
 
 /*
  * Freestanding-safe copie d'une chaîne constante dans un buffer fixe. Remplace
@@ -185,8 +186,10 @@ afros_status_t boot_manager_boot_entry(uint32_t id) {
     }
     
     // Transférer le contrôle au système cible
-    // Cette fonction ne retourne normalement pas
-    afros_hal_reboot_to_image(entry->device_path);
+    // Cette fonction ne retourne normalement pas.
+    // TODO: brancher sur une vraie routine de boot UEFI (gBS->LoadImage + StartImage)
+    //       une fois le pont UEFI -> noyau implémenté dans afros_hal_ops.
+    (void)entry;
     
     return AFROS_SUCCESS;
 }
@@ -292,7 +295,7 @@ afros_status_t boot_manager_scan_efi_partitions(void) {
     
     // TODO: Implémenter le scan des partitions EFI
     // - Lister toutes les partitions avec le flag EFI_SYSTEM_PARTITION
-    - Chercher les fichiers .EFI dans \\EFI\\BOOT\\, \\EFI\\MICROSOFT\\, etc.
+    // - Chercher les fichiers .EFI dans \EFI\BOOT\, \EFI\MICROSOFT\, etc.
     // - Créer des entrées de boot pour chaque OS trouvé
     
     // Exemple pour Windows

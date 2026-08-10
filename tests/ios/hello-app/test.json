@@ -1,0 +1,12 @@
+{
+    "name": "hello-app",
+    "description": "Bundle .app Hello World en Objective-C (Mach-O + NSLog + printf)",
+    "binary": "hello-app",
+    "expected_output": "Hello, AfriOS!",
+    "timeout_ms": 5000,
+    "scoring": {
+        "stdout_match": 50,
+        "exit_code_zero": 30,
+        "completes_under_timeout": 20
+    }
+}

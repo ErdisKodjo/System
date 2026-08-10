@@ -16,6 +16,13 @@
 
 #include <stdint.h>
 #include <stdbool.h>
+/* siginfo_t is needed for the signal_handler_siginfo_t prototype below.
+ * We avoid #include <signal.h> because this header defines its own SIG* enum
+ * constants that would clash with the host libc macros. Instead, we forward-declare
+ * the opaque type — when this header is consumed from a TU that already includes
+ * <signal.h>, the typedef will match; otherwise, the pointer is opaque. */
+struct siginfo_t;
+typedef struct siginfo_t siginfo_t;
 #include "afros_types.h"
 
 // ============================================================================

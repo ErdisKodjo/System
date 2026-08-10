@@ -1,0 +1,61 @@
+// /** @file
+// String definitions for the AfriOS UEFI Shell diagnostic extensions.
+//
+// Referenced by Diagnostics/UefiShell/ShellExtensions.c via STRING_TOKEN().
+// Without this .uni file, the HiiGetString() call in
+// AfriShellCommandGetHelp() returns NULL and the `afri` command prints
+// a fallback string instead of the localized help.
+//
+// Tokens provided (bilingue FR / EN) :
+//   STR_AFRI_CMD_HELP   — main `afri` command help (general)
+//   STR_AFRI_HELP       — short help returned by AfriShellCommandGetHelp
+//   STR_AFRI_VER        — `afri ver` output ("AfriOS firmware version %s")
+//   STR_AFRI_SLOT       — `afri slot` output ("A/B slot management")
+//   STR_AFRI_CAPSULE    — `afri capsule` output ("UEFI capsule management")
+//   STR_AFRI_PCI        — `afri pci` output ("PCI enumeration")
+//   STR_AFRI_MEMTEST    — `afri memtest` output ("POST memory test")
+//
+// Format UEFI HII .uni (EDK2 VfrCompiler compatible) :
+//   - Le bloc /=# ... #=/ délimite le "string package".
+//   - #langdef déclare les langues supportées (ordo des #string n'a pas
+//     d'importance ; l'ordre des #language dans un #string détermine la
+//     priorité de fallback).
+//
+// Copyright (c) 2026, AfriOS. All rights reserved.
+// **/
+
+/=#
+
+#langdef en-US "English"
+#langdef fr-FR "Français"
+
+//
+// General command help (used by AfriShellCommandGetHelp and the
+// "Usage: afri <subcommand>" banner printed when no subcommand is given).
+//
+#string STR_AFRI_CMD_HELP  #language en-US "AfriOS diagnostic commands"
+#string STR_AFRI_CMD_HELP  #language fr-FR "Commandes de diagnostic AfriOS"
+
+#string STR_AFRI_HELP      #language en-US "Run 'afri <subcommand>'. Subcommands: ver, slot, capsule, pci, memtest."
+#string STR_AFRI_HELP      #language fr-FR "Tapez 'afri <sous-commande>'. Sous-commandes : ver, slot, capsule, pci, memtest."
+
+//
+// Per-subcommand output strings. ShellPrintHiiEx() formats them with
+// printf-style %s/%u args (see ShellExtensions.c).
+//
+#string STR_AFRI_VER       #language en-US "AfriOS Hybrid Firmware version %s"
+#string STR_AFRI_VER       #language fr-FR "Version du firmware hybride AfriOS %s"
+
+#string STR_AFRI_SLOT      #language en-US "Active A/B slot state (AfriBootInfo NVRAM variable)"
+#string STR_AFRI_SLOT      #language fr-FR "Gestion des slots A/B (variable NVRAM AfriBootInfo)"
+
+#string STR_AFRI_CAPSULE   #language en-US "UEFI capsule management (check / apply firmware updates)"
+#string STR_AFRI_CAPSULE   #language fr-FR "Gestion des capsules UEFI (vérification / application des mises à jour firmware)"
+
+#string STR_AFRI_PCI       #language en-US "PCI device enumeration via EFI_PCI_IO_PROTOCOL"
+#string STR_AFRI_PCI       #language fr-FR "Énumération PCI via EFI_PCI_IO_PROTOCOL"
+
+#string STR_AFRI_MEMTEST   #language en-US "POST memory test (scans EfiConventionalMemory regions)"
+#string STR_AFRI_MEMTEST   #language fr-FR "Test mémoire POST (scan des régions EfiConventionalMemory)"
+
+#=/

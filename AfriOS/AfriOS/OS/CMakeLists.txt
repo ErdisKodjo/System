@@ -44,6 +44,16 @@ endif()
 enable_testing()
 
 # Add subdirectories
+# Note (étape P2) : afros-network DOIT être traité AVANT afros-core/Kernel
+# car afros-kernel (lib construite par afros-core/Kernel/afros/CMakeLists.txt)
+# consomme désormais afros_net_send() exposée par afros-network (DTN
+# intermittent_net.c → afros_net_send). L'inclusion conditionnelle if(TARGET
+# afros-hal) dans afros-network/CMakeLists.txt permet ce ordre : afros-network
+# est construit avec le repli include-dir-only, et le link symbol-level se
+# résout au moment où afros-kernel-sim ou afros-hal-tests est lié (les deux
+# bibliothèques sont alors disponibles dans le link set).
+add_subdirectory(afros-network)
+
 if(AFROS_BUILD_KERNEL)
     add_subdirectory(afros-core/Kernel)
 endif()
@@ -56,7 +66,6 @@ if(AFROS_BUILD_RUNTIME)
     add_subdirectory(afros-corebridge-core)
 endif()
 
-add_subdirectory(afros-network)
 add_subdirectory(afros-storage)
 add_subdirectory(afros-power-management)
 add_subdirectory(afros-winbridge)

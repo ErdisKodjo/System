@@ -1,0 +1,14 @@
+{
+    "name": "softbus-discovery",
+    "description": "SoftBus discovery: deux devices simulés se trouvent mutuellement",
+    "binary": "softbus.hap",
+    "expected_output": "Hello, AfriOS!",
+    "timeout_ms": 20000,
+    "scoring": {
+        "stdout_match": 50,
+        "exit_code_zero": 30,
+        "completes_under_timeout": 20
+    },
+    "hap_entry": "Discoverer",
+    "extra_abilities": ["Announcer"]
+}

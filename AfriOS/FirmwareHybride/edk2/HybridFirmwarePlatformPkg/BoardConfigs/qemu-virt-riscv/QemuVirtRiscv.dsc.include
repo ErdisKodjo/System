@@ -1,0 +1,46 @@
+## @file
+# Board-specific overrides for QEMU virt RISC-V (RV64GC).
+#
+# This file is included by HybridFirmwarePlatformPkg.dsc when BOARD_CONFIG=QemuVirtRiscv.
+# It overrides PcdFdtBaseAddress to the address where QEMU's virt RISC-V machine
+# passes the Device Tree Blob to OpenSBI (which then forwards it to the next
+# boot stage, UEFI in our case).
+#
+# QEMU virt RISC-V specifics:
+#   - SoC        : QEMU virt (rv64gc, 1+ harts selectable via -smp)
+#   - RAM        : configurable (-m option), default 128 MiB; RAM base = 0x80000000
+#   - FDT base   : QEMU loads FDT at top of RAM (typically 0x87E00000 for 128 MiB),
+#                  then OpenSBI forwards its address via a0 register to the
+#                  next-stage payload (UEFI/AfriOS kernel).
+#   - Boot chain : QEMU → OpenSBI (M-mode, at 0x80000000) → UEFI (S-mode, at 0x80200000)
+#   - ACPI       : NOT available on RISC-V QEMU virt (DeviceTree only)
+#
+# Build:
+#   build -p HybridFirmwarePlatformPkg.dsc -a RISCV64 -t GCC5 \
+#          -D BOARD_CONFIG=QemuVirtRiscv
+#
+# Run:
+#   qemu-system-riscv64 -M virt -smp 1 -m 512M \
+#       -bios Build/HybridFirmwarePlatform/.../FV/HYBRIDFIRMWARE.fd
+#
+# Copyright (c) 2026, AfriOS. All rights reserved.
+##
+
+[Defines]
+  # RISC-V QEMU virt : DeviceTree only (pas d'ACPI sur cette plateforme).
+  DEFINE PCD_PREFER_DEVICE_TREE_DEFAULT  = TRUE
+
+[PcdsFixedAtBuild]
+  # QEMU virt RISC-V : OpenSBI reçoit l'adresse du FDT dans a0 ( registre
+  # OpenSBI ABI : a0 = hartid, a1 = fdt_addr). Pour QEMU virt avec 128 MiB
+  # de RAM (0x80000000..0x88000000), le FDT est chargé en haut de RAM,
+  # typiquement 0x87E00000. La valeur exacte dépend de la taille de RAM
+  # configurée — surcharger si besoin via -D PCD_FDT_BASE_OVERRIDE=...
+  gHybridFirmwarePlatformPkgTokenSpaceGuid.PcdFdtBaseAddress|0x87E00000
+
+  # RISC-V : on force DeviceTree.
+  gHybridFirmwarePlatformPkgTokenSpaceGuid.PcdPreferDeviceTree|TRUE
+  gHybridFirmwarePlatformPkgTokenSpaceGuid.PcdPlatformHasNoFirmwareTables|FALSE
+
+  # QEMU : alimentation stable.
+  gHybridFirmwarePlatformPkgTokenSpaceGuid.PcdPowerSourceType|0

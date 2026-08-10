@@ -1,0 +1,24 @@
+{
+    "app": {
+        "bundleName": "com.afrios.softbus",
+        "versionCode": 1,
+        "versionName": "1.0.0"
+    },
+    "module": {
+        "name": "entry",
+        "type": "entry",
+        "deviceTypes": ["default"],
+        "abilities": [
+            {
+                "name": "Announcer",
+                "srcEntrance": "./abilities/Announcer.js",
+                "visible": true
+            },
+            {
+                "name": "Discoverer",
+                "srcEntrance": "./abilities/Discoverer.js",
+                "visible": true
+            }
+        ]
+    }
+}

@@ -1,7 +1,10 @@
-#include "../../afros-sdk/include/afros_sdk.h"
-#include "../../afros-network/include/afros_net.h"
-#include "../../afros-storage/include/storage_mgr.h"
-#include "../../afros-power-management/include/afros_power.h"
+/* Use the public AfriOS SDK umbrella header — provides access to all subsystems
+ * (storage, network, power, UI) via a single include. Path-agnostic: the SDK
+ * target propagates its include directory via target_include_directories(). */
+#include "afros_sdk.h"
+#include "afros_net.h"
+#include "storage_mgr.h"
+#include "afros_power.h"
 #include <stdio.h>
 
 /**
@@ -16,7 +19,7 @@ int main() {
     printf("[APP] Initialisation des services...\n");
     storage_init();
     net_init();
-    power_init();
+    power_manager_init();
 
     // 2. Utilisation du Stockage (AfrosFS)
     printf("\n--- Test Stockage ---\n");
@@ -31,7 +34,10 @@ int main() {
 
     // 4. Utilisation de l'Énergie
     printf("\n--- Test Énergie ---\n");
-    power_monitor_battery();
+    /* power_monitor_battery() is a legacy name — the public API is
+     * power_is_on_ac_power() + power_get_current_state(). */
+    printf("[APP] Sur AC ? %s\n", power_is_on_ac_power() ? "oui" : "non");
+    printf("[APP] État actuel : %u\n", (unsigned)power_get_current_state());
 
     // 5. Interface Utilisateur via le SDK
     printf("\n--- Test UI SDK ---\n");

@@ -22,6 +22,9 @@ set(AFROS_COREBRIDGE_SOURCES
     src/monitoring.c
     src/resource_allocator.c
 
+    # --- Public API entry points + version string (Tier 1 Stable) ---------
+    src/api_version.c
+
     # --- Application loader (format sniffing + dependency resolution) ------
     loader/app_detector.c
     loader/format_analyzer.c
@@ -82,8 +85,20 @@ target_link_libraries(afros-corebridge PUBLIC
 install(TARGETS afros-corebridge
         LIBRARY DESTINATION lib
         ARCHIVE DESTINATION lib)
+
+# Install the entire include/ tree. The umbrella header
+# include/afros_corebridge.h is the single header third-party consumers
+# should #include to get the full Tier 1 / Tier 2 public surface; the
+# per-subsystem headers (loader.h, runtime_manager.h, version_mgmt.h,
+# babelbridge.h, orchestrator.h) are installed alongside it.
 install(DIRECTORY include/
         DESTINATION include
         FILES_MATCHING
             PATTERN "*.h"
             PATTERN "*.hpp")
+
+# Explicit install of the umbrella header is redundant with the rule
+# above, but documents that afros_corebridge.h is part of the public
+# API contract (frozen as of v1.0.0 — see API.md and CHANGELOG.md).
+install(FILES include/afros_corebridge.h
+        DESTINATION include)

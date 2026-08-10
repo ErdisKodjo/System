@@ -41,6 +41,21 @@
   ## UEFI finale, une fois le blob installé).
   gHybridFirmwareFdtBlobHobGuid = { 0x1c4d8a3e, 0x6b2f, 0x4e91, { 0xa7, 0xd5, 0x3e, 0x9c, 0x1f, 0x0b, 0x2a, 0x4d } }
 
+  ## AfriOS A/B Boot Info NVRAM variable GUID (étape P2). Vendor GUID sous
+  ## laquelle ABSlotManager.c persiste la variable "AfriBootInfo" (active
+  ## slot, boot success, retry count). Promue depuis la définition locale
+  ## dans OtaUpdate/ABSlotManager.c vers le .dec pour partage cross-module
+  ## (ShellExtensions.c relit la variable via ce GUID).
+  ## Voir Include/Guid/AfriBootInfo.h.
+  gAfriBootInfoGuid = { 0xa1b2c3d4, 0xe5f6, 0x4789, { 0x8a, 0xbc, 0xde, 0xf0, 0x12, 0x34, 0x56, 0x78 } }
+
+  ## AfriOS Firmware Update State NVRAM variable GUID (étape P2). Vendor
+  ## GUID sous laquelle FwUpdateAgent.c persiste l'état courant de l'update
+  ## OTA (Idle, Pending, Applying, Applied, Failed). Promue depuis
+  ## OtaUpdate/FwUpdateAgent.c vers le .dec pour la même raison.
+  ## Voir Include/Guid/AfriBootInfo.h.
+  gAfriFwUpdateStateGuid = { 0xb2c3d4e5, 0xf6a7, 0x5890, { 0x9b, 0xcd, 0xef, 0x01, 0x23, 0x45, 0x67, 0x89 } }
+
 [PcdsFixedAtBuild]
   # 0=AC, 1=Battery, 2=Solar
   gHybridFirmwarePlatformPkgTokenSpaceGuid.PcdPowerSourceType|0|UINT8|0x00000001

@@ -35,6 +35,8 @@
 
 [Guids]
   gEfiCapsuleVendorGuid
+  # Consommation du GUID promu dans le .dec (étape P2).
+  gAfriFwUpdateStateGuid
 
 [Depex]
   gEfiSimpleFileSystemProtocolGuid

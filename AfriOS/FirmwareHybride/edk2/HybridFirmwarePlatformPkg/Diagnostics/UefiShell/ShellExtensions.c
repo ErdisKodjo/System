@@ -30,6 +30,16 @@
 #include <Library/BaseMemoryLib.h>
 #include <Library/PrintLib.h>
 
+//
+// GUID promotion (étape P2) : AfriBootInfoGuid n'est plus redéfinie
+// localement dans ce handler — on consomme gAfriBootInfoGuid depuis le
+// .dec via Include/Guid/AfriBootInfo.h. Cela garantit que le shell
+// `afri slot` lit la variable avec le MÊME GUID que ABSlotManager.c
+// qui l'a écrite (avant, les deux .c avaient des copies locales
+// indépendantes, ce qui aurait cassé la lecture si l'un changeait).
+//
+#include <Guid/AfriBootInfo.h>
+
 #define AFRI_SHELL_CMD_NAME    L"afri"
 #define AFRI_FIRMWARE_VERSION  L"0.1.0"
 
@@ -141,15 +151,12 @@ AfriCmdSlot (
   )
 {
   EFI_STATUS  Status;
-  EFI_GUID    AfriBootInfoGuid = {
-    0x8B6F2A1C, 0x3D5E, 0x4F8A, { 0xB1, 0xC2, 0xD3, 0xE4, 0xF5, 0xA6, 0xB7, 0xC8 }
-  };
   UINT8       Info[8];
   UINTN       Size;
 
   Size = sizeof (Info);
   ZeroMem (Info, Size);
-  Status = gRT->GetVariable (L"AfriBootInfo", &AfriBootInfoGuid, NULL, &Size, Info);
+  Status = gRT->GetVariable (L"AfriBootInfo", &gAfriBootInfoGuid, NULL, &Size, Info);
   if (EFI_ERROR (Status)) {
     ShellPrintEx (-1, -1, L"afri_slot: AfriBootInfo not available (%r)\r\n", Status);
     return SHELL_NOT_FOUND;

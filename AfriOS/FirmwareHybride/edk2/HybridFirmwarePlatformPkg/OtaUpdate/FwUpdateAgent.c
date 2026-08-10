@@ -27,16 +27,17 @@
 #include <Library/BaseMemoryLib.h>
 #include <Library/DevicePathLib.h>
 
+//
+// GUID promotion (étape P2) : gAfriFwUpdateStateGuid n'est plus défini
+// localement ici, mais provient du .dec (HybridFirmwarePlatformPkg.dec,
+// section [Guids]) via l'en-tête dédié Include/Guid/AfriBootInfo.h.
+// Voir la note dans ABSlotManager.c pour la justification complète.
+//
+#include <Guid/AfriBootInfo.h>
+
 #define FW_UPDATE_CAP_PATH       L"\\EFI\\AfriOS\\Updates\\update.cap"
 #define FW_UPDATE_STATE_VAR      L"AfriFwUpdateState"
 #define FW_UPDATE_MAX_CAPSULES   4
-
-//
-// Vendor GUID under which the FwUpdateState NVRAM variable is stored.
-//
-EFI_GUID  gAfriFwUpdateStateGuid = {
-  0x4D5E6F70, 0x8192, 0x4A3B, { 0xB4, 0xC5, 0xD6, 0xE7, 0xF8, 0x09, 0x1A, 0x2B }
-};
 
 //
 // Persistent update states.

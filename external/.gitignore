@@ -1,0 +1,5 @@
+# External dependencies are fetched by scripts/fetch-deps.sh
+# They are NOT committed to the AfriOS repo.
+*
+!.gitignore
+!README.md

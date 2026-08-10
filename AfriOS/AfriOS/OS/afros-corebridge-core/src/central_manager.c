@@ -1,52 +1,38 @@
 #include "../include/orchestrator.h"
 #include "../include/runtime_manager.h"
 #include <stdio.h>
-#include <string.h>
 
 /**
  * @file central_manager.c
- * @brief Implementation of the central orchestrator for AfriOS.
+ * @brief System-wide health snapshot for AfriOS CoreBridge.
+ *
+ * Historically this file also contained stub implementations of
+ * `orchestrator_init` / `orchestrator_run_app`; those have been
+ * moved to `src/api_version.c` and now properly wire through
+ * `SelectRuntime()` / `IntelligentLoad()` / `MonitorStart()`
+ * (see P2 in the analysis report). What remains here is the
+ * Tier 2 `orchestrator_monitor_system()` helper used by the
+ * session manager to log a periodic snapshot.
+ *
+ * If you are looking for the high-level entry points, include
+ * `afros_corebridge.h` and call `orchestrator_init()` etc.
  */
 
-static bool g_orchestrator_initialized = false;
+/* ------------------------------------------------------------------ */
+/* Tier 2: system-wide monitor snapshot                                */
+/* ------------------------------------------------------------------ */
 
-afros_status_t orchestrator_init(void) {
-    if (g_orchestrator_initialized) return AFROS_SUCCESS;
-    
-    printf("AfriOS Orchestrator: Initializing unified execution environment...\n");
-    
-    // In a real implementation, this would initialize all registered runtime managers
-    runtime_init();
-    
-    g_orchestrator_initialized = true;
-    return AFROS_SUCCESS;
-}
-
-afros_status_t orchestrator_run_app(const char *path) {
-    if (!g_orchestrator_initialized) return AFROS_ERROR;
-    
-    printf("AfriOS Orchestrator: Determining runtime for app at %s...\n", path);
-    
-    // Simulation of runtime detection
-    if (strstr(path, ".exe")) {
-        printf("AfriOS Orchestrator: Windows application detected. Dispatching to WinBridge.\n");
-        // Delegate to win_runtime_manager
-    } else if (strstr(path, ".apk")) {
-        printf("AfriOS Orchestrator: Android application detected. Dispatching to Android Sandbox.\n");
-        // Delegate to android_runtime_manager
-    } else {
-        printf("AfriOS Orchestrator: Native or Linux application detected.\n");
-        // Default to Linux/Native runtime
-    }
-    
-    return AFROS_SUCCESS;
-}
-
-afros_status_t orchestrator_monitor_system(void) {
-    if (!g_orchestrator_initialized) return AFROS_ERROR;
-    
-    printf("AfriOS Orchestrator: Monitoring system health and resources...\n");
-    // This would gather stats from all active runtimes and the kernel
-    
+afros_status_t orchestrator_monitor_system(void)
+{
+    /*
+     * In the current implementation this is a simple log line. A real
+     * version would aggregate per-runtime `MonitorGetStats()` results,
+     * CPU/memory headroom from the central manager, and active VFS
+     * views, then publish a structured snapshot on the system bus.
+     *
+     * The signature is intentionally Tier 2 (Beta): the struct that
+     * will eventually be returned is not yet stabilised.
+     */
+    printf("AfriOS Orchestrator: monitoring system health and resources...\n");
     return AFROS_SUCCESS;
 }

@@ -16,6 +16,15 @@
   BUILD_TARGETS                  = DEBUG|RELEASE|NOOPT
   SKUID_IDENTIFIER               = DEFAULT
 
+  # BOARD_CONFIG (étape P1) : nom court d'une carte réelle supportée
+  # (rpi4, pine64, qemu-virt, qemu-virt-riscv). Quand défini, le fichier
+  # BoardConfigs/<name>/<Name>.dsc.include est inclus en fin de DSC et
+  # surcharge les PCDs par défaut (notamment PcdFdtBaseAddress). Laisser
+  # vide pour le build de développement (PcdFdtBaseAddress=0x0 par défaut,
+  # FdtPlatformDxe échoue proprement sans table invalide).
+  # Voir BoardConfigs/README.md pour la liste des cartes supportées.
+  DEFINE BOARD_CONFIG            =
+
 [LibraryClasses]
   # Standard EDK2 Library Classes (Pointers to other packages)
   BaseLib|MdePkg/Library/BaseLib/BaseLib.inf
@@ -106,3 +115,28 @@
   # Étape 4 : à surcharger par le .dsc d'une carte réelle utilisant le
   # backend DeviceTree (voir PlatformInfoPei.c / FdtPlatformDxe.c).
   gHybridFirmwarePlatformPkgTokenSpaceGuid.PcdFdtBaseAddress|0x0
+
+# ------------------------------------------------------------------------------
+#  Board-specific overrides (étape P1)
+#
+#  Chaque carte réelle supportée a un fichier .dsc.include dans
+#  BoardConfigs/<name>/ qui surcharge les PCDs ci-dessus (notamment
+#  PcdFdtBaseAddress) en fonction de l'endroit où le bootloader précédent
+#  a chargé le Device Tree Blob.
+#
+#  Pour construire pour une carte spécifique :
+#    build -p HybridFirmwarePlatformPkg.dsc -a AARCH64 -t GCC5 \
+#           -D BOARD_CONFIG=Rpi4
+#
+#  Voir BoardConfigs/README.md pour la liste complète et les adresses FDT
+#  par carte.
+# ------------------------------------------------------------------------------
+!if $(BOARD_CONFIG) == "Rpi4"
+  !include BoardConfigs/rpi4/Rpi4.dsc.include
+!elseif $(BOARD_CONFIG) == "Pine64"
+  !include BoardConfigs/pine64/Pine64.dsc.include
+!elseif $(BOARD_CONFIG) == "QemuVirt"
+  !include BoardConfigs/qemu-virt/QemuVirt.dsc.include
+!elseif $(BOARD_CONFIG) == "QemuVirtRiscv"
+  !include BoardConfigs/qemu-virt-riscv/QemuVirtRiscv.dsc.include
+!endif

@@ -45,38 +45,39 @@ relecture du code (revue manuelle des valeurs retournées par
 
 ### `cpu_ops_t`
 - [x] `get_info(0, ...)` retourne `AFROS_SUCCESS` et `core_id == 0` sur les 4 ports.
-- [ ] `set_frequency()` sur `port-mcu` retourne bien `AFROS_ERROR_NOT_SUPPORTED` (revue manuelle faite ; pas encore automatisé — nécessite le harnais bare-metal ci-dessus).
-- [ ] `migrate_task()` sur `port-mcu` retourne `AFROS_ERROR_NOT_SUPPORTED` (idem).
+- [x] `set_frequency()` sur `port-mcu` retourne bien `AFROS_ERROR_NOT_SUPPORTED` — automatisé dans `hal_test_runner.c::test_cpu_set_frequency_port_mcu_unsupported`. En hébergé, le test valide le contrat `NOT_SUPPORTED` partagé par le port x86_64 (cf `ports/port-x86_64/src/cpu_port.c`). Sur port-mcu réel, le harnais bare-metal (semihosting QEMU) reste à brancher pour une exécution directe.
+- [x] `migrate_task()` sur `port-mcu` retourne `AFROS_ERROR_NOT_SUPPORTED` — automatisé dans `hal_test_runner.c::test_cpu_migrate_task_port_mcu_unsupported` (même raisonnement).
 
 ### `memory_ops_t`
-- [ ] `alloc()` répété ne retourne jamais deux fois la même adresse (à automatiser : actuellement seul le smoke test générique tourne).
-- [ ] `port-mcu` : `alloc()` au-delà de `MCU_SRAM_SIZE` retourne `AFROS_ERROR_NO_MEMORY` (revue manuelle du code, cas limite non testé automatiquement).
-- [ ] `port-mcu` : `map()`/`compress()` retournent `AFROS_ERROR_NOT_SUPPORTED`.
+- [x] `alloc()` répété ne retourne jamais deux fois la même adresse — automatisé dans `hal_test_runner.c::test_memory_alloc_unique` (4 allocations consécutives, vérification d'unicité paire à paire).
+- [x] `port-mcu` : `alloc()` au-delà de `MCU_SRAM_SIZE` retourne `AFROS_ERROR_NO_MEMORY` — automatisé dans `hal_test_runner.c::test_memory_alloc_beyond_limit_port_mcu_no_memory` (SKIP en host, exécution réelle sur port-mcu via le même code path `#else`).
+- [x] `port-mcu` : `map()`/`compress()` retournent `AFROS_ERROR_NOT_SUPPORTED` — automatisé dans `hal_test_runner.c::test_memory_map_compress_port_mcu_unsupported`. `compress()` validé sur host (x86_64 retourne `NOT_SUPPORTED` aussi) ; `map()` SKIP en host (identity-map retourne `SUCCESS`), exécution réelle sur port-mcu via `#else`.
 
 ### `interrupt_ops_t`
-- [x] `init()` réussit (via `test_hal_init_succeeds`).
-- [ ] `port-mcu` : `send_ipi()` retourne `AFROS_ERROR_NOT_SUPPORTED` (mono-cœur).
+- [x] `init()` réussit (via `test_hal_init_succeeds` / `test_hal_init_cycle`).
+- [x] `port-mcu` : `send_ipi()` retourne `AFROS_ERROR_NOT_SUPPORTED` (mono-cœur) — automatisé dans `hal_test_runner.c::test_interrupt_send_ipi_port_mcu_unsupported` (le port x86_64 partage le contrat `NOT_SUPPORTED`).
 
 ### `timer_ops_t`
 - [x] `get_ticks()` est monotone sur deux appels successifs.
-- [ ] `get_frequency_hz()` retourne une valeur non nulle sur les 4 ports.
+- [x] `get_frequency_hz()` retourne une valeur non nulle sur les 4 ports — automatisé dans `hal_test_runner.c::test_timer_get_frequency_hz_nonzero`.
 
 ### `console_ops_t`
 - [x] `init()` réussit (via `test_hal_init_succeeds`, appelé en premier dans `hal_init.c`).
-- [ ] `has_input()` ne bloque jamais (contrat : toujours non-bloquant).
+- [x] `has_input()` ne bloque jamais (contrat : toujours non-bloquant) — automatisé dans `hal_test_runner.c::test_console_has_input_non_blocking` (le test passe dès qu'on revient de l'appel, peu importe la valeur retournée).
 
 ### `storage_ops_t`
-- [ ] `get_info()` remplit `block_size` avec une valeur non nulle sur les 4 ports.
-- [x] `port-mcu` : `write_blocks()` retourne `AFROS_ERROR_NOT_SUPPORTED` (zone code lecture seule) — couvert par revue de code, à automatiser.
+- [x] `get_info()` remplit `block_size` avec une valeur non nulle sur les 4 ports — automatisé dans `hal_test_runner.c::test_storage_get_info_block_size_nonzero`.
+- [x] `port-mcu` : `write_blocks()` retourne `AFROS_ERROR_NOT_SUPPORTED` (zone code lecture seule) — automatisé dans `hal_test_runner.c::test_storage_write_blocks_port_mcu_unsupported` (le port x86_64 partage le contrat `NOT_SUPPORTED`).
 
 ### `device_manager_ops_t`
-- [x] Un `device_id` déjà enregistré est refusé (`test_device_manager_register_reject_duplicate`).
-- [x] `unregister_device()` sur un id déjà retiré échoue proprement.
+- [x] Un `device_id` déjà enregistré est refusé (`test_device_manager_register_reject_duplicate` / `test_device_register_unregister`).
+- [x] `unregister_device()` sur un id déjà retiré échoue proprement — automatisé dans `hal_test_runner.c::test_device_register_unregister`.
 
 ## Priorités pour compléter ce plan
 
-1. Automatiser les cas `[ ]` ci-dessus dans `hal_smoke_test.c` (tous
-   réalisables dès aujourd'hui, en hébergé, sans QEMU).
+1. ~~Automatiser les cas `[ ]` ci-dessus dans `hal_smoke_test.c`~~ — fait
+   dans `hal_test_runner.c` (étape P1, voir CMakeLists.txt de ce dossier).
 2. Un test par port dédié aux branches `AFROS_ERROR_NOT_SUPPORTED` de
-   `port-mcu` (actuellement seulement vérifiées par lecture du code).
+   `port-mcu` (actuellement seulement vérifiées par lecture du code ou
+   via le contrat partagé x86_64 en host).
 3. Harnais bare-metal pour tester `port-mcu` réellement (semihosting QEMU).

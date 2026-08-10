@@ -1,0 +1,17 @@
+{
+    "name": "ability-lifecycle",
+    "description": "Ability lifecycle: onStart→onActive→onInactive→onBackground→onForeground→onStop",
+    "binary": "lifecycle.hap",
+    "expected_output": "Hello, AfriOS!",
+    "timeout_ms": 15000,
+    "scoring": {
+        "stdout_match": 40,
+        "exit_code_zero": 30,
+        "completes_under_timeout": 30
+    },
+    "hap_entry": "LifecycleAbility",
+    "expected_log_order": [
+        "onStart", "onActive", "onInactive",
+        "onBackground", "onForeground", "onStop"
+    ]
+}

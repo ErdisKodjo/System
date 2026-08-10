@@ -32,3 +32,9 @@
   UefiBootServicesTableLib
   UefiLib
   DebugLib
+
+[Guids]
+  # Consommation du GUID promu dans le .dec (étape P2). Le linker résout
+  # gAfriBootInfoGuid depuis la bibliothèque auto-générée du package ;
+  # aucun .c ne définit le GUID localement.
+  gAfriBootInfoGuid

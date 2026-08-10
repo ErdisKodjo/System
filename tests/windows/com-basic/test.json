@@ -1,0 +1,12 @@
+{
+    "name": "com-basic",
+    "description": "COM instantiation: CoInitialize + CoCreateInstance(CLSID_DOMDocument) + Release",
+    "binary": "com-basic.exe",
+    "expected_output": "Hello, AfriOS!",
+    "timeout_ms": 10000,
+    "scoring": {
+        "stdout_match": 50,
+        "exit_code_zero": 30,
+        "completes_under_timeout": 20
+    }
+}

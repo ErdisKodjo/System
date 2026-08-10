@@ -18,6 +18,11 @@ typedef uint32_t afros_status_t;
 #define AFROS_ERROR_NO_MEMORY   3
 #define AFROS_ERROR_NOT_SUPPORTED 4
 #define AFROS_ERROR_TIMEOUT     5
+#define AFROS_ERROR_INVALID_STATE 6
+#define AFROS_ERROR_NOT_FOUND   7
+#define AFROS_ERROR_PERMISSION  8
+#define AFROS_ERROR_BUSY        9
+#define AFROS_ERROR_IO          10
 
 typedef uint64_t afros_phys_addr_t;
 typedef uint64_t afros_virt_addr_t;

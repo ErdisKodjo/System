@@ -1,0 +1,47 @@
+## @file
+# Board-specific overrides for QEMU virt ARM64 (cortex-a57 / cortex-a53).
+#
+# This file is included by HybridFirmwarePlatformPkg.dsc when BOARD_CONFIG=QemuVirt.
+# It overrides PcdFdtBaseAddress to the address where QEMU's virt machine
+# passes the Device Tree Blob to the firmware (via the -dtb flag or generated
+# on-the-fly by QEMU and stored in RAM at 0x40000000 by default).
+#
+# QEMU virt ARM64 specifics:
+#   - SoC        : QEMU virt (cortex-a15/a53/a57/a72 — selectable via -cpu)
+#   - RAM        : configurable (-m option), default 128 MiB
+#   - FDT base   : 0x40000000 (QEMU virt convention; passed in x0 register
+#                  at boot — UEFI reads it from there too)
+#   - Boot mode  : QEMU loads the firmware via -bios or -pflash
+#   - ACPI       : available (QEMU exposes ACPI tables), but DeviceTree
+#                  is preferred for simplicity in CI/test environments
+#
+# Build:
+#   build -p HybridFirmwarePlatformPkg.dsc -a AARCH64 -t GCC5 \
+#          -D BOARD_CONFIG=QemuVirt
+#
+# Run:
+#   qemu-system-aarch64 -M virt -cpu cortex-a57 -m 512M \
+#       -bios Build/HybridFirmwarePlatform/.../FV/HYBRIDFIRMWARE.fd
+#
+# Copyright (c) 2026, AfriOS. All rights reserved.
+##
+
+[Defines]
+  # QEMU virt : DeviceTree est le backend le plus simple. ACPI fonctionne
+  # aussi mais nécessite plus de setup (QEMU expose AcpiTables mais le code
+  # dans HardwareAbstractionLayer/Acpi/ n'est pas testé contre QEMU).
+  DEFINE PCD_PREFER_DEVICE_TREE_DEFAULT  = TRUE
+
+[PcdsFixedAtBuild]
+  # QEMU virt ARM64 : le FDT est chargé par QEMU à 0x40000000 et son adresse
+  # est aussi passée dans x0 au boot. On fixe la valeur à 0x40000000 pour
+  # que PlatformInfoPei puisse la relire même si le registre x0 n'est pas
+  # sauvegardé (par exemple après un chainload OpenSBI→UEFI).
+  gHybridFirmwarePlatformPkgTokenSpaceGuid.PcdFdtBaseAddress|0x40000000
+
+  # QEMU virt : on force DeviceTree pour la reproductibilité CI.
+  gHybridFirmwarePlatformPkgTokenSpaceGuid.PcdPreferDeviceTree|TRUE
+  gHybridFirmwarePlatformPkgTokenSpaceGuid.PcdPlatformHasNoFirmwareTables|FALSE
+
+  # QEMU : alimentation "stable" (pas de batterie).
+  gHybridFirmwarePlatformPkgTokenSpaceGuid.PcdPowerSourceType|0

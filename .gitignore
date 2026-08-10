@@ -1,3 +1,47 @@
-The input shows only a "System" file was modified, which doesn't provide clear information about specific file types or artifacts that should be ignored. Since there are no clear build artifacts, dependency directories, or temporary files mentioned in the changes, and the current .gitignore is empty, no specific rules need to be added.
+# =============================================================================
+# AfriOS root .gitignore
+#
+# (Previous content of this file was an auto-generated placeholder describing
+# an empty .gitignore. It carried no actual ignore rules and has been replaced
+# with the rules below. Merge-safe: no prior rules were dropped.)
+# =============================================================================
 
-(empty - output nothing)
+# --- External dependencies (vendored by scripts/fetch-deps.sh) ---------------
+# The external/ tree is fetched on demand, never committed. We use
+# `external/*` (NOT `external/`) so the negation patterns below can
+# re-include the two metadata files — git cannot re-include files under a
+# fully-ignored directory, so a bare `external/` would also hide
+# external/.gitignore and external/README.md (which ARE tracked).
+# See external/README.md and external/.gitignore for the per-dir policy.
+external/*
+!external/.gitignore
+!external/README.md
+
+# --- Build outputs ----------------------------------------------------------
+build/
+*.o
+*.so
+*.elf
+*.fd
+*.apk
+*.hap
+
+# --- Editor / IDE cruft -----------------------------------------------------
+*.swp
+*.swo
+*~
+.vscode/
+.idea/
+*.bak
+
+# --- OS cruft ---------------------------------------------------------------
+.DS_Store
+Thumbs.db
+
+# --- Python / CMake caches (CI safety net) ----------------------------------
+__pycache__/
+*.pyc
+CMakeCache.txt
+CMakeFiles/
+cmake_install.cmake
+compile_commands.json

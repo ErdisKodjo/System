@@ -29,16 +29,23 @@
 #include <Library/BaseMemoryLib.h>
 #include <Library/MemoryAllocationLib.h>
 
+//
+// GUID promotion (étape P2) : gAfriBootInfoGuid n'est plus défini
+// localement ici, mais provient du .dec (HybridFirmwarePlatformPkg.dec,
+// section [Guids]) via l'en-tête dédié Include/Guid/AfriBootInfo.h.
+// Cela permet à ShellExtensions.c (et tout autre consumer) de lire la
+// variable "AfriBootInfo" avec le MÊME GUID — avant, chaque .c redéfinissait
+// sa propre copie locale, ce qui cassait la cohérence si l'un était modifié.
+//
+#include <Guid/AfriBootInfo.h>
+
 #define AFRI_BOOT_INFO_VAR_NAME   L"AfriBootInfo"
 #define AFRI_BOOT_MAX_RETRIES     3
 
 //
-// Vendor GUID for the AfriBootInfo NVRAM variable.
+// Forward declaration of the AFRI_BOOT_INFO struct (was below the GUID
+// definition before — kept here since the GUID is now in the .dec).
 //
-EFI_GUID  gAfriBootInfoGuid = {
-  0x8B6F2A1C, 0x3D5E, 0x4F8A, { 0xB1, 0xC2, 0xD3, 0xE4, 0xF5, 0xA6, 0xB7, 0xC8 }
-};
-
 typedef struct {
   UINT8   ActiveSlot;
   UINT8   BootSuccess;

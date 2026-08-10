@@ -1,0 +1,12 @@
+{
+    "name": "gdi-draw",
+    "description": "Dessin GDI: GetDC + CreateSolidBrush + Rectangle + ReleaseDC",
+    "binary": "gdi-draw.exe",
+    "expected_output": "GDI rectangle drawn",
+    "timeout_ms": 10000,
+    "scoring": {
+        "stdout_match": 50,
+        "exit_code_zero": 30,
+        "completes_under_timeout": 20
+    }
+}

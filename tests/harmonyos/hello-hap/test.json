@@ -1,0 +1,13 @@
+{
+    "name": "hello-hap",
+    "description": "HAP Hello World (module.json + HelloAbility.js onStart)",
+    "binary": "hello.hap",
+    "expected_output": "Hello, AfriOS!",
+    "timeout_ms": 10000,
+    "scoring": {
+        "stdout_match": 50,
+        "exit_code_zero": 30,
+        "completes_under_timeout": 20
+    },
+    "hap_entry": "HelloAbility"
+}

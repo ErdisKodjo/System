@@ -1,0 +1,17 @@
+{
+    "name": "activity-lifecycle",
+    "description": "Cycle de vie Activity: ordre onCreate→onStart→onResume→onPause→onStop→onDestroy",
+    "binary": "lifecycle.dex",
+    "expected_output": "Hello, AfriOS!",
+    "timeout_ms": 15000,
+    "scoring": {
+        "stdout_match": 40,
+        "exit_code_zero": 30,
+        "completes_under_timeout": 30
+    },
+    "entry_class": "com.afrios.LifecycleActivity",
+    "expected_log_order": [
+        "onCreate", "onStart", "onResume",
+        "onPause", "onStop", "onDestroy"
+    ]
+}

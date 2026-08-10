@@ -1,0 +1,188 @@
+// /** @file
+// String definitions for the AfriOS Boot Order HII setup form.
+//
+// Referenced by SetupUi/HiiForms/BootOrderForm.vfr via STRING_TOKEN().
+// Without this .uni file, the VFR compilation fails with "undefined
+// string token" errors, and the Boot Order setup form cannot be opened
+// from the HII Setup Browser.
+//
+// Tokens provided (bilingue FR / EN) :
+//   STR_BOOT_FORM_TITLE          — form title (spec-required alias)
+//   STR_BOOT_ORDER_FORM_TITLE    — form title (VFR token)
+//   STR_BOOT_ORDER_FORM_HELP     — formset help
+//   STR_BOOT_ORDER_SUBTITLE      — main form subtitle
+//   STR_BOOT_ORDER_PROMPT        — boot order selection prompt
+//   STR_BOOT_ORDER_HELP          — boot order selection help
+//   STR_BOOT_ORDER_HINT          — informative text
+//   STR_BOOT_ORDER_SPACER        — visual spacer (empty string)
+//   STR_BOOT_OPT_AFRIOS/LINUX/WINDOWS/APPLE/PXE/SHELL
+//                                 — oneof option labels
+//   STR_BOOT_DELAY_PROMPT        — boot delay numeric prompt
+//   STR_BOOT_DELAY_HELP          — boot delay numeric help
+//   STR_BOOT_SECURITY_SUBTITLE   — security section subtitle
+//   STR_SECURE_BOOT_PROMPT       — secure boot checkbox prompt
+//   STR_SECURE_BOOT_HELP         — secure boot checkbox help
+//   STR_VERBOSE_BOOT_PROMPT      — verbose boot checkbox prompt
+//   STR_VERBOSE_BOOT_HELP        — verbose boot checkbox help
+//   STR_BOOT_HELP_TEXT           — generic help text (spec-required)
+//   STR_AB_SLOT_HELP             — A/B slot help
+//   STR_AB_SLOT_INFO             — A/B slot info text
+//   STR_SAVE_EXIT / STR_SAVE_EXIT_HELP
+//   STR_DISCARD_EXIT / STR_DISCARD_EXIT_HELP
+//   STR_BOOT_ADV_TITLE / STR_BOOT_ADV_SUBTITLE
+//   STR_FALLBACK_PROMPT / STR_FALLBACK_HELP / STR_FALLBACK_NONE/SHELL/RECOVERY
+//   STR_RETRY_PROMPT / STR_RETRY_HELP
+//   STR_BOOT_ADV_HELP / STR_BOOT_ADV_HINT
+//
+// Copyright (c) 2026, AfriOS. All rights reserved.
+// **/
+
+/=#
+
+#langdef en-US "English"
+#langdef fr-FR "Français"
+
+//
+// Form / formset titles.
+//
+#string STR_BOOT_FORM_TITLE           #language en-US "Boot Order Configuration"
+#string STR_BOOT_FORM_TITLE           #language fr-FR "Configuration de l'ordre de démarrage"
+
+#string STR_BOOT_ORDER_FORM_TITLE     #language en-US "Boot Order Configuration"
+#string STR_BOOT_ORDER_FORM_TITLE     #language fr-FR "Configuration de l'ordre de démarrage"
+
+#string STR_BOOT_ORDER_FORM_HELP      #language en-US "Configure the system boot order, delay, and Secure Boot."
+#string STR_BOOT_ORDER_FORM_HELP      #language fr-FR "Configurer l'ordre de démarrage, le délai et le Secure Boot."
+
+#string STR_BOOT_ORDER_SUBTITLE       #language en-US "Boot Order"
+#string STR_BOOT_ORDER_SUBTITLE       #language fr-FR "Ordre de démarrage"
+
+#string STR_BOOT_ORDER_SPACER         #language en-US ""
+#string STR_BOOT_ORDER_SPACER         #language fr-FR ""
+
+//
+// Boot order selection (oneof).
+//
+#string STR_BOOT_ORDER_PROMPT         #language en-US "Select boot order"
+#string STR_BOOT_ORDER_PROMPT         #language fr-FR "Sélectionnez l'ordre de démarrage"
+
+#string STR_BOOT_ORDER_HELP           #language en-US "Use the arrow keys to reorder boot options, press Enter to confirm."
+#string STR_BOOT_ORDER_HELP           #language fr-FR "Utilisez les flèches pour réordonner, Entrée pour confirmer."
+
+#string STR_BOOT_ORDER_HINT           #language en-US "Boot order is applied at next reset."
+#string STR_BOOT_ORDER_HINT           #language fr-FR "L'ordre sera appliqué au prochain redémarrage."
+
+#string STR_BOOT_HELP_TEXT            #language en-US "Use the arrow keys to reorder, Enter to confirm."
+#string STR_BOOT_HELP_TEXT            #language fr-FR "Utilisez les flèches pour réordonner, Entrée pour confirmer."
+
+//
+// Boot options (oneof labels). The platform populates the option list
+// dynamically from BootOrder NVRAM at form-open time, but the VFR still
+// needs static string tokens for the default options.
+//
+#string STR_BOOT_OPT_AFRIOS           #language en-US "AfriOS"
+#string STR_BOOT_OPT_AFRIOS           #language fr-FR "AfriOS"
+
+#string STR_BOOT_OPT_LINUX            #language en-US "Linux"
+#string STR_BOOT_OPT_LINUX            #language fr-FR "Linux"
+
+#string STR_BOOT_OPT_WINDOWS          #language en-US "Windows"
+#string STR_BOOT_OPT_WINDOWS          #language fr-FR "Windows"
+
+#string STR_BOOT_OPT_APPLE            #language en-US "macOS (Apple Boot)"
+#string STR_BOOT_OPT_APPLE            #language fr-FR "macOS (Apple Boot)"
+
+#string STR_BOOT_OPT_PXE              #language en-US "PXE Network Boot"
+#string STR_BOOT_OPT_PXE              #language fr-FR "Démarrage réseau PXE"
+
+#string STR_BOOT_OPT_SHELL            #language en-US "UEFI Shell"
+#string STR_BOOT_OPT_SHELL            #language fr-FR "Shell UEFI"
+
+//
+// Boot delay (numeric).
+//
+#string STR_BOOT_DELAY_PROMPT         #language en-US "Boot delay (seconds)"
+#string STR_BOOT_DELAY_PROMPT         #language fr-FR "Délai avant démarrage (secondes)"
+
+#string STR_BOOT_DELAY_HELP           #language en-US "Time to wait before auto-booting the default option."
+#string STR_BOOT_DELAY_HELP           #language fr-FR "Temps d'attente avant le démarrage automatique de l'option par défaut."
+
+//
+// Security section.
+//
+#string STR_BOOT_SECURITY_SUBTITLE    #language en-US "Security"
+#string STR_BOOT_SECURITY_SUBTITLE    #language fr-FR "Sécurité"
+
+#string STR_SECURE_BOOT_PROMPT        #language en-US "Enable Secure Boot"
+#string STR_SECURE_BOOT_PROMPT        #language fr-FR "Activer Secure Boot"
+
+#string STR_SECURE_BOOT_HELP          #language en-US "Verify signatures on UEFI images before executing them."
+#string STR_SECURE_BOOT_HELP          #language fr-FR "Vérifier les signatures des images UEFI avant exécution."
+
+#string STR_VERBOSE_BOOT_PROMPT       #language en-US "Verbose boot"
+#string STR_VERBOSE_BOOT_PROMPT       #language fr-FR "Démarrage verbeux"
+
+#string STR_VERBOSE_BOOT_HELP         #language en-US "Print detailed boot diagnostics to the console."
+#string STR_VERBOSE_BOOT_HELP         #language fr-FR "Afficher les diagnostics détaillés de démarrage sur la console."
+
+//
+// A/B slot info (text controls).
+//
+#string STR_AB_SLOT_HELP              #language en-US "A/B slot info (active slot, retry count)"
+#string STR_AB_SLOT_HELP              #language fr-FR "Infos slot A/B (slot actif, retries restants)"
+
+#string STR_AB_SLOT_INFO              #language en-US "A/B slot management (see afri slot command)"
+#string STR_AB_SLOT_INFO              #language fr-FR "Gestion A/B (voir la commande afri slot)"
+
+//
+// Save / Discard exit buttons.
+//
+#string STR_SAVE_EXIT                 #language en-US "Save and Exit"
+#string STR_SAVE_EXIT                 #language fr-FR "Enregistrer et Quitter"
+
+#string STR_SAVE_EXIT_HELP            #language en-US "Save changes to NVRAM and exit the form."
+#string STR_SAVE_EXIT_HELP            #language fr-FR "Enregistrer les modifications dans la NVRAM et quitter."
+
+#string STR_DISCARD_EXIT              #language en-US "Discard and Exit"
+#string STR_DISCARD_EXIT              #language fr-FR "Annuler et Quitter"
+
+#string STR_DISCARD_EXIT_HELP         #language en-US "Discard changes and exit the form."
+#string STR_DISCARD_EXIT_HELP         #language fr-FR "Annuler les modifications et quitter."
+
+//
+// Advanced sub-form.
+//
+#string STR_BOOT_ADV_TITLE            #language en-US "Advanced Boot Options"
+#string STR_BOOT_ADV_TITLE            #language fr-FR "Options de démarrage avancées"
+
+#string STR_BOOT_ADV_SUBTITLE         #language en-US "Fallback and retry configuration"
+#string STR_BOOT_ADV_SUBTITLE         #language fr-FR "Configuration du repli et des retries"
+
+#string STR_FALLBACK_PROMPT           #language en-US "Fallback boot mode"
+#string STR_FALLBACK_PROMPT           #language fr-FR "Mode de démarrage de repli"
+
+#string STR_FALLBACK_HELP             #language en-US "What to do if the primary boot option fails."
+#string STR_FALLBACK_HELP             #language fr-FR "Action à effectuer si l'option principale échoue."
+
+#string STR_FALLBACK_NONE             #language en-US "None (halt)"
+#string STR_FALLBACK_NONE             #language fr-FR "Aucun (arrêt)"
+
+#string STR_FALLBACK_SHELL            #language en-US "Drop to UEFI Shell"
+#string STR_FALLBACK_SHELL            #language fr-FR "Shell UEFI"
+
+#string STR_FALLBACK_RECOVERY         #language en-US "Recovery mode"
+#string STR_FALLBACK_RECOVERY         #language fr-FR "Mode récupération"
+
+#string STR_RETRY_PROMPT              #language en-US "Boot retry count"
+#string STR_RETRY_PROMPT              #language fr-FR "Nombre de retries"
+
+#string STR_RETRY_HELP                #language en-US "Number of times to retry the primary boot option before falling back."
+#string STR_RETRY_HELP                #language fr-FR "Nombre de tentatives avant de basculer sur le repli."
+
+#string STR_BOOT_ADV_HELP             #language en-US "Configure fallback and retry behavior for boot failures."
+#string STR_BOOT_ADV_HELP             #language fr-FR "Configurer le repli et les retries en cas d'échec de démarrage."
+
+#string STR_BOOT_ADV_HINT             #language en-US "Changes take effect at next boot."
+#string STR_BOOT_ADV_HINT             #language fr-FR "Les modifications prendront effet au prochain démarrage."
+
+#=/

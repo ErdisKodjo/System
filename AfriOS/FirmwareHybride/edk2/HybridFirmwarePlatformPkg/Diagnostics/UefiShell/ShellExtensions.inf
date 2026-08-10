@@ -38,5 +38,11 @@
   gEfiPciIoProtocolGuid
   gEfiSimpleFileSystemProtocolGuid
 
+[Guids]
+  # Consommation du GUID promu dans le .dec (étape P2). Le handler
+  # afri_slot lit la variable NVRAM "AfriBootInfo" via ce GUID, qui doit
+  # matcher celui utilisé par ABSlotManager.c pour l'écriture.
+  gAfriBootInfoGuid
+
 [Depex]
   TRUE
