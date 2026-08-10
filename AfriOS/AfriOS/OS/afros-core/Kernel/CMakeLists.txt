@@ -13,6 +13,15 @@ if(NOT EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/ports/port-${AFROS_PORT}/CMakeLists.t
     message(FATAL_ERROR "AFROS_PORT='${AFROS_PORT}' inconnu — ports disponibles : arm64, x86_64, riscv, mcu (voir Kernel/ports/)")
 endif()
 
+# Le port mcu est le seul bare-metal/freestanding : on active automatiquement
+# AFROS_FREESTANDING pour qu'il se propage (via afros-hal PUBLIC compile-defs)
+# à tous les consommateurs (afros-kernel, afros-port, kprintf.c, main.c, …).
+# L'utilisateur peut forcer -DAFROS_FREESTANDING=OFF pour debug, mais le build
+# mcu risque de ne pas link (pas de _start libc, sortie via UART brut).
+if(AFROS_PORT STREQUAL "mcu" AND NOT DEFINED AFROS_FREESTANDING)
+    set(AFROS_FREESTANDING ON CACHE BOOL "Build the kernel freestanding (no libc)" FORCE)
+endif()
+
 add_subdirectory(hal)
 add_subdirectory(ports/port-${AFROS_PORT})
 add_subdirectory(drivers)
@@ -22,6 +31,6 @@ add_subdirectory(afros)
 # même raison que afros-kernel-sim — voir Kernel/afros/CMakeLists.txt.
 if(AFROS_PORT STREQUAL "mcu")
     message(STATUS "AFROS_PORT=mcu : hal/tests non construits (bare-metal, pas de runtime hébergé).")
-elseif(AFRIOS_BUILD_TESTS)
+elseif(AFROS_BUILD_TESTS)
     add_subdirectory(hal/tests)
 endif()

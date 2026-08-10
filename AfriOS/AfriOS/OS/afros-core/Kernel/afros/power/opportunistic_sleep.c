@@ -1,5 +1,5 @@
 #include "afros_hal.h"
-#include <stdio.h>
+#include "kprintf.h"
 
 /**
  * @file opportunistic_sleep.c
@@ -9,7 +9,7 @@
 
 void power_opportunistic_sleep(uint32_t idle_time_ms) {
     if (idle_time_ms > 5000) { // 5 seconds idle
-        printf("Power: System is idle. Activating opportunistic sleep for peripheral devices...\n");
+        kprintf("Power: System is idle. Activating opportunistic sleep for peripheral devices...\n");
         // Suspend peripherals and lower CPU voltage
     }
 }

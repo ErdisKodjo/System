@@ -1,5 +1,5 @@
 #include "timer_abstraction.h"
-#include <stdio.h>
+#include "kprintf.h"
 
 /**
  * @file timer_port.c
@@ -11,7 +11,7 @@ static uint64_t s_ticks = 0;
 
 static afros_status_t timer_init_impl(uint32_t tick_hz) {
     (void)tick_hz;
-    printf("[TIMER] RISC-V : CLINT mtime, fréquence = %u Hz (timebase-frequency du DT).\n", s_freq_hz);
+    kprintf("[TIMER] RISC-V : CLINT mtime, fréquence = %u Hz (timebase-frequency du DT).\n", s_freq_hz);
     return AFROS_SUCCESS;
 }
 
@@ -29,24 +29,24 @@ static afros_status_t timer_get_frequency_impl(uint32_t *freq_hz) {
 
 static afros_status_t timer_set_oneshot_impl(uint64_t delay_ticks, afros_timer_callback_t cb, void *ctx) {
     (void)cb; (void)ctx;
-    printf("[TIMER] RISC-V : mtimecmp = mtime + %llu, ou SBI sbi_set_timer() (one-shot)\n", (unsigned long long)delay_ticks);
+    kprintf("[TIMER] RISC-V : mtimecmp = mtime + %llu, ou SBI sbi_set_timer() (one-shot)\n", (unsigned long long)delay_ticks);
     return AFROS_SUCCESS;
 }
 
 static afros_status_t timer_set_periodic_impl(uint64_t period_ticks, afros_timer_callback_t cb, void *ctx) {
     (void)cb; (void)ctx;
-    printf("[TIMER] RISC-V : ré-armement mtimecmp toutes les %llu ticks (périodique, ISR déclenche le suivant)\n",
+    kprintf("[TIMER] RISC-V : ré-armement mtimecmp toutes les %llu ticks (périodique, ISR déclenche le suivant)\n",
            (unsigned long long)period_ticks);
     return AFROS_SUCCESS;
 }
 
 static afros_status_t timer_cancel_impl(void) {
-    printf("[TIMER] RISC-V : mtimecmp = UINT64_MAX (désarmé)\n");
+    kprintf("[TIMER] RISC-V : mtimecmp = UINT64_MAX (désarmé)\n");
     return AFROS_SUCCESS;
 }
 
 static afros_status_t timer_busy_wait_us_impl(uint32_t microseconds) {
-    printf("[TIMER] RISC-V : attente active %u us (boucle sur mtime)\n", microseconds);
+    kprintf("[TIMER] RISC-V : attente active %u us (boucle sur mtime)\n", microseconds);
     return AFROS_SUCCESS;
 }
 

@@ -1,5 +1,5 @@
 #include "cpu_abstraction.h"
-#include <stdio.h>
+#include "kprintf.h"
 
 /**
  * @file cpu_port.c
@@ -10,7 +10,7 @@
  */
 
 static afros_status_t cpu_init_impl(void) {
-    printf("[CPU] Initialisation de l'ordonnancement clusteris� (ARM v8/v9 aware)...\n");
+    kprintf("[CPU] Initialisation de l'ordonnancement clusteris� (ARM v8/v9 aware)...\n");
     return AFROS_SUCCESS;
 }
 
@@ -27,12 +27,12 @@ static afros_status_t cpu_get_info_impl(uint32_t cpu_id, afros_cpu_info_t *info)
 }
 
 static afros_status_t cpu_set_frequency_impl(uint32_t cpu_id, uint32_t freq_mhz) {
-    printf("[CPU] Core %u : Fr�quence fix�e � %u MHz.\n", cpu_id, freq_mhz);
+    kprintf("[CPU] Core %u : Fr�quence fix�e � %u MHz.\n", cpu_id, freq_mhz);
     return AFROS_SUCCESS;
 }
 
 static afros_status_t cpu_migrate_task_impl(uint32_t from_cpu, uint32_t to_cpu, uint32_t task_id) {
-    printf("[CPU] Migration : T�che %u d�plac�e du Core %u (Source) vers le Core %u (Dest).\n", task_id, from_cpu, to_cpu);
+    kprintf("[CPU] Migration : T�che %u d�plac�e du Core %u (Source) vers le Core %u (Dest).\n", task_id, from_cpu, to_cpu);
     return AFROS_SUCCESS;
 }
 

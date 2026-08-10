@@ -37,7 +37,7 @@ make clean
 - `Kernel/afros/` : Logique de haut niveau du noyau, arch-agnostic (Scheduler, FS, Network, Power, Security).
 - `Kernel/hal/` : Contrats d'abstraction mat�rielle + dispatch g�n�rique - seule fronti�re autoris�e vers le mat�riel.
 - `Kernel/drivers/` : Pilotes mat�riels concrets (PCI, ...), d�pendent uniquement de `hal/include/`.
-- `Kernel/CMakeLists.txt` : Build unifi� (hal -> drivers -> afros), branch� dans le CMake racine via `AFRIOS_BUILD_KERNEL`.
+- `Kernel/CMakeLists.txt` : Build unifi� (hal -> drivers -> afros), branch� dans le CMake racine via `AFROS_BUILD_KERNEL`.
 - `Makefile` : Build autonome ARM64/simulation (alternative l�g�re au CMake).
 - `linker.ld` : D�finition des zones m�moire (FLASH/RAM), dans `Kernel/hal/scripts/`.
 

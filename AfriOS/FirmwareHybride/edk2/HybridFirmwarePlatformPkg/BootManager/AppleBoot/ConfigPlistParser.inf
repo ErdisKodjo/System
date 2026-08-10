@@ -1,0 +1,29 @@
+## @file
+# Config Plist Parser INF file.
+#
+# Library-class module providing ParseConfigPlist() / ConfigGetString() /
+# ConfigGetInteger() for OpenCore/Clover-style config.plist files.
+#
+# Copyright (c) 2026, AfriOS. All rights reserved.
+##
+
+[Defines]
+  INF_VERSION                    = 0x00010005
+  BASE_NAME                      = ConfigPlistParserLib
+  FILE_GUID                      = 3C4D5E6F-7081-4C9D-0E1F-2A3B4C5D6E7F
+  MODULE_TYPE                    = BASE
+  VERSION_STRING                 = 1.0
+  LIBRARY_CLASS                  = ConfigPlistParserLib
+
+[Sources]
+  ConfigPlistParser.c
+
+[Packages]
+  MdePkg/MdePkg.dec
+  HybridFirmwarePlatformPkg/HybridFirmwarePlatformPkg.dec
+
+[LibraryClasses]
+  BaseLib
+  BaseMemoryLib
+  MemoryAllocationLib
+  DebugLib

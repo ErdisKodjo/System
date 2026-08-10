@@ -42,7 +42,7 @@ for PORT in "${PORTS[@]}"; do
   echo "=== Port $PORT ==="
   BUILD_DIR="$OS_DIR/build-test-$PORT"
 
-  cmake -B "$BUILD_DIR" -S "$OS_DIR" -DAFROS_PORT="$PORT" -DAFRIOS_BUILD_KERNEL=ON >/dev/null
+  cmake -B "$BUILD_DIR" -S "$OS_DIR" -DAFROS_PORT="$PORT" -DAFROS_BUILD_KERNEL=ON >/dev/null
   cmake --build "$BUILD_DIR" >/dev/null
 
   echo "--- Tests unitaires HAL ($PORT) ---"
@@ -76,6 +76,6 @@ if [ ${#FAILED[@]} -eq 0 ]; then
   exit 0
 else
   echo "=== Echecs : ===" >&2
-  printf ' - %s\n' "${FAILED[@]}" >&2
+  for f in "${FAILED[@]}"; do echo " - $f" >&2; done
   exit 1
 fi

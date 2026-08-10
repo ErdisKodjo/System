@@ -1,5 +1,5 @@
 #include "afros_hal.h"
-#include <stdio.h>
+#include "kprintf.h"
 #include <string.h>
 
 /**
@@ -17,7 +17,7 @@ afros_status_t scheduler_init(void) {
     memset(g_task_table, 0, sizeof(g_task_table));
     g_task_count = 0;
     g_current_task_idx = -1;
-    printf("[SCHED] Ordonnanceur initialis. Capacit : %d tches.\n", MAX_TASKS);
+    kprintf("[SCHED] Ordonnanceur initialis. Capacit : %d tches.\n", MAX_TASKS);
     return AFROS_SUCCESS;
 }
 
@@ -31,7 +31,7 @@ afros_status_t scheduler_create_task(const char *name, uint32_t priority) {
     task->state = AFROS_TASK_READY;
     task->cpu_affinity = 0xFF; // N'importe quel CPU par dfaut
     
-    printf("[SCHED] Nouvelle tche cre : %s (ID: %u, Priorit: %u)\n", name, task->task_id, priority);
+    kprintf("[SCHED] Nouvelle tche cre : %s (ID: %u, Priorit: %u)\n", name, task->task_id, priority);
     g_task_count++;
     
     return AFROS_SUCCESS;
@@ -52,5 +52,5 @@ void scheduler_schedule_next(void) {
     afros_task_t *next_task = &g_task_table[g_current_task_idx];
     next_task->state = AFROS_TASK_RUNNING;
     
-    printf("[SCHED] Switch vers tche : %s (ID: %u)\n", next_task->name, next_task->task_id);
+    kprintf("[SCHED] Switch vers tche : %s (ID: %u)\n", next_task->name, next_task->task_id);
 }

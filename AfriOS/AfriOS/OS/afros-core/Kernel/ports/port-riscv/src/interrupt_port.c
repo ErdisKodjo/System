@@ -1,5 +1,5 @@
 #include "interrupt_abstraction.h"
-#include <stdio.h>
+#include "kprintf.h"
 
 /**
  * @file interrupt_port.c
@@ -7,53 +7,53 @@
  */
 
 static afros_status_t irq_init_impl(void) {
-    printf("[IRQ] RISC-V : PLIC initialisé (priority/threshold), CLINT mappé.\n");
+    kprintf("[IRQ] RISC-V : PLIC initialisé (priority/threshold), CLINT mappé.\n");
     return AFROS_SUCCESS;
 }
 
 static afros_status_t irq_enable_impl(uint32_t irq) {
-    printf("[IRQ] RISC-V : PLIC enable bit positionné pour la source %u.\n", irq);
+    kprintf("[IRQ] RISC-V : PLIC enable bit positionné pour la source %u.\n", irq);
     return AFROS_SUCCESS;
 }
 
 static afros_status_t irq_disable_impl(uint32_t irq) {
-    printf("[IRQ] RISC-V : PLIC enable bit effacé pour la source %u.\n", irq);
+    kprintf("[IRQ] RISC-V : PLIC enable bit effacé pour la source %u.\n", irq);
     return AFROS_SUCCESS;
 }
 
 static afros_status_t irq_set_priority_impl(uint32_t irq, uint32_t priority) {
-    printf("[IRQ] RISC-V : PLIC priority[%u] = %u.\n", irq, priority);
+    kprintf("[IRQ] RISC-V : PLIC priority[%u] = %u.\n", irq, priority);
     return AFROS_SUCCESS;
 }
 
 static afros_status_t irq_register_handler_impl(uint32_t irq, afros_irq_handler_t handler, void *ctx) {
     (void)handler; (void)ctx;
-    printf("[IRQ] RISC-V : handler enregistré pour la source PLIC %u.\n", irq);
+    kprintf("[IRQ] RISC-V : handler enregistré pour la source PLIC %u.\n", irq);
     return AFROS_SUCCESS;
 }
 
 static afros_status_t irq_unregister_handler_impl(uint32_t irq) {
-    printf("[IRQ] RISC-V : handler retiré pour la source PLIC %u.\n", irq);
+    kprintf("[IRQ] RISC-V : handler retiré pour la source PLIC %u.\n", irq);
     return AFROS_SUCCESS;
 }
 
 static afros_status_t irq_ack_impl(uint32_t irq) {
-    printf("[IRQ] RISC-V : PLIC claim/complete pour la source %u.\n", irq);
+    kprintf("[IRQ] RISC-V : PLIC claim/complete pour la source %u.\n", irq);
     return AFROS_SUCCESS;
 }
 
 static afros_status_t irq_send_ipi_impl(uint32_t target_cpu, uint32_t irq) {
     (void)irq;
-    printf("[IRQ] RISC-V : CLINT msip[%u] = 1 (IPI logicielle) ou SBI send_ipi.\n", target_cpu);
+    kprintf("[IRQ] RISC-V : CLINT msip[%u] = 1 (IPI logicielle) ou SBI send_ipi.\n", target_cpu);
     return AFROS_SUCCESS;
 }
 
 static void irq_enable_interrupts_impl(void) {
-    printf("[IRQ] csrs mstatus, MSTATUS_MIE\n");
+    kprintf("[IRQ] csrs mstatus, MSTATUS_MIE\n");
 }
 
 static void irq_disable_interrupts_impl(void) {
-    printf("[IRQ] csrc mstatus, MSTATUS_MIE\n");
+    kprintf("[IRQ] csrc mstatus, MSTATUS_MIE\n");
 }
 
 interrupt_ops_t arch_interrupt_ops = {

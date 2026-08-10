@@ -43,7 +43,8 @@ target_include_directories(afros-kernel PUBLIC
 
 target_link_libraries(afros-kernel PUBLIC afros-hal)
 
-# Simulateur hébergé (mode actuel : printf/stdio, tourne en espace
+# Simulateur hébergé (mode actuel : affichage via kprintf -> libc vprintf en
+# build non-freestanding, tourne en espace
 # utilisateur). Formalise ce que faisait déjà `afros-core/Makefile` — reste
 # le point d'entrée `make run` tant que le noyau n'est pas freestanding.
 #

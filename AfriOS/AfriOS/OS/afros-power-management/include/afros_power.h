@@ -1,7 +1,13 @@
 #ifndef AFROS_POWER_MANAGER_H
 #define AFROS_POWER_MANAGER_H
 
-#include "../../afros-core/Kernel/hal/include/afros_types.h"
+/*
+ * En-tête HAL fourni transitivement par la cible CMake `afros-hal`
+ * (target_link_libraries afros-power-management PUBLIC afros-hal). En cas de
+ * build partiel sans la cible, le CMakeLists de afros-power-management repli
+ * sur ${CMAKE_SOURCE_DIR}/afros-core/Kernel/hal/include comme include direct.
+ */
+#include "afros_types.h"
 
 /**
  * @file power_manager.h

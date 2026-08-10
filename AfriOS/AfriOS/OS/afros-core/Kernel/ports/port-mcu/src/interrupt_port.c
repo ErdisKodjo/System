@@ -1,5 +1,5 @@
 #include "interrupt_abstraction.h"
-#include <stdio.h>
+#include "kprintf.h"
 
 /**
  * @file interrupt_port.c
@@ -8,34 +8,34 @@
  */
 
 static afros_status_t irq_init_impl(void) {
-    printf("[IRQ] MCU : NVIC initialisé, table de vecteurs à VTOR.\n");
+    kprintf("[IRQ] MCU : NVIC initialisé, table de vecteurs à VTOR.\n");
     return AFROS_SUCCESS;
 }
 
 static afros_status_t irq_enable_impl(uint32_t irq) {
-    printf("[IRQ] MCU : NVIC->ISER, IRQ %u activée.\n", irq);
+    kprintf("[IRQ] MCU : NVIC->ISER, IRQ %u activée.\n", irq);
     return AFROS_SUCCESS;
 }
 
 static afros_status_t irq_disable_impl(uint32_t irq) {
-    printf("[IRQ] MCU : NVIC->ICER, IRQ %u désactivée.\n", irq);
+    kprintf("[IRQ] MCU : NVIC->ICER, IRQ %u désactivée.\n", irq);
     return AFROS_SUCCESS;
 }
 
 static afros_status_t irq_set_priority_impl(uint32_t irq, uint32_t priority) {
     if (priority > 15) return AFROS_ERROR_INVALID_PARAM; // ex. 4 bits de priorité
-    printf("[IRQ] MCU : NVIC->IPR[%u] = %u.\n", irq, priority);
+    kprintf("[IRQ] MCU : NVIC->IPR[%u] = %u.\n", irq, priority);
     return AFROS_SUCCESS;
 }
 
 static afros_status_t irq_register_handler_impl(uint32_t irq, afros_irq_handler_t handler, void *ctx) {
     (void)handler; (void)ctx;
-    printf("[IRQ] MCU : handler installé dans la table de vecteurs, IRQ %u.\n", irq);
+    kprintf("[IRQ] MCU : handler installé dans la table de vecteurs, IRQ %u.\n", irq);
     return AFROS_SUCCESS;
 }
 
 static afros_status_t irq_unregister_handler_impl(uint32_t irq) {
-    printf("[IRQ] MCU : handler par défaut restauré, IRQ %u.\n", irq);
+    kprintf("[IRQ] MCU : handler par défaut restauré, IRQ %u.\n", irq);
     return AFROS_SUCCESS;
 }
 
@@ -52,11 +52,11 @@ static afros_status_t irq_send_ipi_impl(uint32_t target_cpu, uint32_t irq) {
 }
 
 static void irq_enable_interrupts_impl(void) {
-    printf("[IRQ] cpsie i\n");
+    kprintf("[IRQ] cpsie i\n");
 }
 
 static void irq_disable_interrupts_impl(void) {
-    printf("[IRQ] cpsid i\n");
+    kprintf("[IRQ] cpsid i\n");
 }
 
 interrupt_ops_t arch_interrupt_ops = {

@@ -1,5 +1,5 @@
 #include "memory_abstraction.h"
-#include <stdio.h>
+#include "kprintf.h"
 
 /**
  * @file memory_port.c
@@ -14,7 +14,7 @@
 static afros_size_t s_allocated = 0;
 
 static afros_status_t memory_init_impl(void) {
-    printf("[MEM] MCU : SRAM interne à 0x%lx, %u octets, pas de MMU (modèle plat).\n",
+    kprintf("[MEM] MCU : SRAM interne à 0x%lx, %u octets, pas de MMU (modèle plat).\n",
            MCU_SRAM_BASE, MCU_SRAM_SIZE);
     return AFROS_SUCCESS;
 }
@@ -27,13 +27,13 @@ static afros_status_t memory_alloc_impl(afros_size_t size, afros_virt_addr_t *v_
     *v_addr = MCU_SRAM_BASE + s_allocated;
     s_allocated += size;
 
-    printf("[MEM] MCU : allocation statique de %zu octets à 0x%llx\n", size, (unsigned long long)*v_addr);
+    kprintf("[MEM] MCU : allocation statique de %zu octets à 0x%llx\n", size, (unsigned long long)*v_addr);
     return AFROS_SUCCESS;
 }
 
 static afros_status_t memory_map_impl(afros_phys_addr_t p_addr, afros_virt_addr_t v_addr, afros_size_t size, uint32_t flags) {
     (void)p_addr; (void)v_addr; (void)size; (void)flags;
-    printf("[MEM] MCU : pas de MMU, map() non applicable.\n");
+    kprintf("[MEM] MCU : pas de MMU, map() non applicable.\n");
     return AFROS_ERROR_NOT_SUPPORTED;
 }
 

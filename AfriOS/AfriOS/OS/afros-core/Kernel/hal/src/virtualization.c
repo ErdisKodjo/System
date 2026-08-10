@@ -1,5 +1,5 @@
 #include "afros_hal.h"
-#include <stdio.h>
+#include "kprintf.h"
 
 /**
  * @file virtualization.c
@@ -8,10 +8,10 @@
  */
 
 void virt_init(void) {
-    printf("Virtualization: Initializing virtualization support...\n");
+    kprintf("Virtualization: Initializing virtualization support...\n");
 }
 
 void virt_create_guest(uint32_t guest_id) {
-    printf("Virtualization: Creating guest OS %u...\n", guest_id);
+    kprintf("Virtualization: Creating guest OS %u...\n", guest_id);
     // Initialize guest OS environment and resources
 }

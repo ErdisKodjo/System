@@ -1,5 +1,5 @@
 #include "storage_abstraction.h"
-#include <stdio.h>
+#include "kprintf.h"
 
 /**
  * @file storage_port.c
@@ -8,7 +8,7 @@
  */
 
 static afros_status_t storage_init_impl(void) {
-    printf("[STORAGE] RISC-V : négociation des features virtio-blk, anneaux virtqueue configurés.\n");
+    kprintf("[STORAGE] RISC-V : négociation des features virtio-blk, anneaux virtqueue configurés.\n");
     return AFROS_SUCCESS;
 }
 
@@ -17,25 +17,25 @@ static afros_status_t storage_get_info_impl(uint32_t device_id, afros_storage_in
     info->block_count = 20971520ULL; // ~10 Go, exemple image virtio-blk
     info->block_size = 512;
     info->read_only = false;
-    printf("[STORAGE] virtio-blk%u : %llu blocs de %u octets\n", device_id,
+    kprintf("[STORAGE] virtio-blk%u : %llu blocs de %u octets\n", device_id,
            (unsigned long long)info->block_count, info->block_size);
     return AFROS_SUCCESS;
 }
 
 static afros_status_t storage_read_blocks_impl(uint32_t device_id, uint64_t lba, uint32_t count, uint8_t *buffer) {
     (void)buffer;
-    printf("[STORAGE] virtio-blk%u : requête VIRTIO_BLK_T_IN, %u blocs depuis LBA %llu\n", device_id, count, (unsigned long long)lba);
+    kprintf("[STORAGE] virtio-blk%u : requête VIRTIO_BLK_T_IN, %u blocs depuis LBA %llu\n", device_id, count, (unsigned long long)lba);
     return AFROS_SUCCESS;
 }
 
 static afros_status_t storage_write_blocks_impl(uint32_t device_id, uint64_t lba, uint32_t count, const uint8_t *buffer) {
     (void)buffer;
-    printf("[STORAGE] virtio-blk%u : requête VIRTIO_BLK_T_OUT, %u blocs depuis LBA %llu\n", device_id, count, (unsigned long long)lba);
+    kprintf("[STORAGE] virtio-blk%u : requête VIRTIO_BLK_T_OUT, %u blocs depuis LBA %llu\n", device_id, count, (unsigned long long)lba);
     return AFROS_SUCCESS;
 }
 
 static afros_status_t storage_flush_impl(uint32_t device_id) {
-    printf("[STORAGE] virtio-blk%u : requête VIRTIO_BLK_T_FLUSH\n", device_id);
+    kprintf("[STORAGE] virtio-blk%u : requête VIRTIO_BLK_T_FLUSH\n", device_id);
     return AFROS_SUCCESS;
 }
 

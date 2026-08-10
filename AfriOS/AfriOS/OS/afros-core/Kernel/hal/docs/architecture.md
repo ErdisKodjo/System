@@ -66,9 +66,9 @@ le code existant via les tables d'opérations (`cpu_ops_t`, `memory_ops_t`,
    `Kernel/drivers/` — la HAL n'avait jusqu'ici aucun système de build CMake
    (fichier vide), et le noyau n'était compilable que via le `Makefile`
    autonome d'`afros-core`, absent du build CMake unifié malgré l'option
-   `AFRIOS_BUILD_KERNEL` déjà déclarée à la racine.
+   `AFROS_BUILD_KERNEL` déjà déclarée à la racine.
 4. **`afros-core/Kernel` branché dans `OS/CMakeLists.txt`** — l'option
-   `AFRIOS_BUILD_KERNEL` existait sans effet ; le noyau était absent du
+   `AFROS_BUILD_KERNEL` existait sans effet ; le noyau était absent du
    build "unifié" que le README annonce.
 5. **`afros-core/Makefile` complété** — plusieurs fichiers présents sur
    disque (`big_little.c`, `big_little_support.c`, `power_aware_sched.c`,
@@ -93,9 +93,10 @@ le code existant via les tables d'opérations (`cpu_ops_t`, `memory_ops_t`,
 ## Ce qui reste hors périmètre de l'étape 2 (renvoyé aux étapes 3-4)
 
 - Le noyau (`afros/main.c` → `kernel_main`) reste un **simulateur hébergé**
-  (`printf`/`stdio.h`, `int main()`), pas un point d'entrée bare-metal. Le
-  rendre freestanding (vecteur d'interruption, init MMU, `_start` sans
-  libc) est un prérequis de l'étape 3 (firmware universel / ports).
+  (sortie via libc en build non-freestanding, `int main()`), pas un point
+  d'entrée bare-metal. Le rendre freestanding (vecteur d'interruption, init
+  MMU, `_start` sans libc) est un prérequis de l'étape 3 (firmware universel /
+  ports).
 - `hal/include/device_abstraction.h` n'a pas encore d'implémentation
   (`src/device_manager.c` manquant) — le pilote PCI ne peut pas s'enregistrer
   réellement tant que ce fichier n'existe pas.

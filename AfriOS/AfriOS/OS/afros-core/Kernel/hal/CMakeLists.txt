@@ -27,8 +27,16 @@ add_library(afros-hal STATIC
     src/gpu_manager.c
     src/io_subsystem.c
     src/virtualization.c
+    src/kprintf.c
 )
 
 target_include_directories(afros-hal PUBLIC
     ${CMAKE_CURRENT_SOURCE_DIR}/include
 )
+
+# Propagate AFROS_FREESTANDING to every consumer of afros-hal so kprintf.c,
+# main.c (gate of `int main()`), hal_smoke_test.c (host-only test) and any
+# other freestanding-aware source can branch consistently with the build mode.
+if(AFROS_FREESTANDING)
+    target_compile_definitions(afros-hal PUBLIC AFROS_FREESTANDING)
+endif()

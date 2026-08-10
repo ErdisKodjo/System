@@ -7,6 +7,19 @@
 #include "../include/afros_types.h"
 #include "../HAL/include/afros_hal.h"
 
+/*
+ * Freestanding-safe copie d'une chaîne constante dans un buffer fixe. Remplace
+ * l'ancien formatage de chaîne qui n'aurait de toute façon rien formaté (aucun
+ * % dans les littéraux ci-dessous) tout en gardant le noyau libc-free.
+ */
+static void boot_set_str(char *dst, size_t n, const char *src) {
+    size_t i = 0;
+    if (dst && n) {
+        if (src) while (i + 1 < n && src[i]) { dst[i] = src[i]; i++; }
+        dst[i] = '\0';
+    }
+}
+
 // Configuration globale
 static boot_manager_config_t g_boot_config = {
     .entries = NULL,
@@ -264,8 +277,8 @@ afros_status_t boot_manager_detect_os(void) {
         .is_active = true,
         .is_default = true
     };
-    snprintf(afros_entry.label, sizeof(afros_entry.label), "AfriOS");
-    snprintf(afros_entry.device_path, sizeof(afros_entry.device_path), "\\EFI\\AFRIOS\\AFRIOS.EFI");
+    boot_set_str(afros_entry.label, sizeof(afros_entry.label), "AfriOS");
+    boot_set_str(afros_entry.device_path, sizeof(afros_entry.device_path), "\\EFI\\AFRIOS\\AFRIOS.EFI");
     boot_manager_add_entry(&afros_entry);
     
     return AFROS_SUCCESS;
@@ -288,8 +301,8 @@ afros_status_t boot_manager_scan_efi_partitions(void) {
         .is_active = true,
         .is_default = false
     };
-    snprintf(windows_entry.label, sizeof(windows_entry.label), "Windows Boot Manager");
-    snprintf(windows_entry.device_path, sizeof(windows_entry.device_path), "\\EFI\\MICROSOFT\\BOOT\\BOOTMGFW.EFI");
+    boot_set_str(windows_entry.label, sizeof(windows_entry.label), "Windows Boot Manager");
+    boot_set_str(windows_entry.device_path, sizeof(windows_entry.device_path), "\\EFI\\MICROSOFT\\BOOT\\BOOTMGFW.EFI");
     // boot_manager_add_entry(&windows_entry); // Décommenter après détection réelle
     
     // Exemple pour Linux
@@ -298,8 +311,8 @@ afros_status_t boot_manager_scan_efi_partitions(void) {
         .is_active = true,
         .is_default = false
     };
-    snprintf(linux_entry.label, sizeof(linux_entry.label), "Linux (GRUB)");
-    snprintf(linux_entry.device_path, sizeof(linux_entry.device_path), "\\EFI\\BOOT\\BOOTX64.EFI");
+    boot_set_str(linux_entry.label, sizeof(linux_entry.label), "Linux (GRUB)");
+    boot_set_str(linux_entry.device_path, sizeof(linux_entry.device_path), "\\EFI\\BOOT\\BOOTX64.EFI");
     // boot_manager_add_entry(&linux_entry); // Décommenter après détection réelle
     
     return AFROS_SUCCESS;

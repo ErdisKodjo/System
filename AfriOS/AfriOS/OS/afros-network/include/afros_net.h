@@ -1,11 +1,20 @@
 #ifndef AFROS_NET_H
 #define AFROS_NET_H
 
-#include "../../afros-core/Kernel/hal/include/afros_types.h"
+/*
+ * En-tête HAL fourni transitivement par la cible CMake `afros-hal`
+ * (target_link_libraries afros-network PUBLIC afros-hal). En cas de build
+ * partiel sans la cible, le CMakeLists de afros-network repli sur
+ * ${CMAKE_SOURCE_DIR}/afros-core/Kernel/hal/include comme include direct.
+ *
+ * On inclut ici uniquement afros_types.h (types de base) plutôt que afros_hal.h
+ * (qui amènerait cpu_abstraction, memory_abstraction, … inutiles au réseau).
+ */
+#include "afros_types.h"
 
 /**
  * @file afros_net.h
- * @brief Gestionnaire r�seau intelligent pour AfriOS.
+ * @brief Gestionnaire réseau intelligent pour AfriOS.
  */
 
 typedef enum {

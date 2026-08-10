@@ -36,6 +36,13 @@
   PlatformDetectLib|HybridFirmwarePlatformPkg/HardwareAbstractionLayer/PlatformDetect/PlatformDetectLib.inf
   MeasuredBootLib|HybridFirmwarePlatformPkg/Security/MeasuredBoot/MeasuredBootLib.inf
 
+  # Library classes introduced by Agent FW (étape firmware-completion) :
+  # un parser plist minimaliste pour AppleBoot, un gestionnaire A/B slot, et
+  # un module de passthrough EPT/Stage-2 pour le minimal hypervisor.
+  ConfigPlistParserLib|HybridFirmwarePlatformPkg/BootManager/AppleBoot/ConfigPlistParser.inf
+  AbSlotManagerLib|HybridFirmwarePlatformPkg/OtaUpdate/ABSlotManager.inf
+  PassthroughLib|HybridFirmwarePlatformPkg/ShimLayer/MinimalHypervisor/Passthrough.inf
+
 [LibraryClasses.common.SEC]
   ExtractGuidedSectionLib|MdePkg/Library/BaseExtractGuidedSectionLib/BaseExtractGuidedSectionLib.inf
 
@@ -69,6 +76,20 @@
   HybridFirmwarePlatformPkg/BootManager/BootPolicyEngine.inf
   HybridFirmwarePlatformPkg/BootManager/UefiBootManager/GenericBootManager.inf
   HybridFirmwarePlatformPkg/BootManager/UefiBootManager/LinuxBootManager.inf
+  HybridFirmwarePlatformPkg/BootManager/WindowsBoot/WinBootMgr.inf
+  HybridFirmwarePlatformPkg/BootManager/AppleBoot/AppleBootHelper.inf
+  HybridFirmwarePlatformPkg/BootManager/PxeBoot/IpxeDriver.inf
+  HybridFirmwarePlatformPkg/BootManager/PxeBoot/HttpBootClient.inf
+  HybridFirmwarePlatformPkg/BootManager/BootMenu/BootMenuUi.inf
+  HybridFirmwarePlatformPkg/BootManager/BootMenu/BootScripts.inf
+
+  # OTA Update
+  HybridFirmwarePlatformPkg/OtaUpdate/FwUpdateAgent.inf
+
+  # Diagnostics
+  HybridFirmwarePlatformPkg/Diagnostics/PowerOnSelfTest/MemoryTest.inf
+  HybridFirmwarePlatformPkg/Diagnostics/PowerOnSelfTest/PciEnumTest.inf
+  HybridFirmwarePlatformPkg/Diagnostics/UefiShell/ShellExtensions.inf
 
   # Security
   HybridFirmwarePlatformPkg/Security/SecureBoot/SecureBootPolicy.inf

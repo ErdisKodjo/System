@@ -1,5 +1,5 @@
 #include "afros_hal.h"
-#include <stdio.h>
+#include "kprintf.h"
 
 /**
  * @file big_little.c
@@ -14,14 +14,14 @@ void scheduler_check_migration(uint32_t task_id, uint32_t current_cpu_id, uint32
     
     // 2. Analyse de la charge et de la topologie
     if (!info.is_big && load_percentage > 80) {
-        printf("[big.LITTLE] Alerte : Tâche %u sur CPU %u (LITTLE) surchargée (%u%%).\n", task_id, current_cpu_id, load_percentage);
+        kprintf("[big.LITTLE] Alerte : Tâche %u sur CPU %u (LITTLE) surchargée (%u%%).\n", task_id, current_cpu_id, load_percentage);
         
         // Suggestion de migration vers un coeur big (ex: Core 4)
         uint32_t target_cpu = 4;
-        printf("[big.LITTLE] Action : Migration demandée de %u vers %u.\n", current_cpu_id, target_cpu);
+        kprintf("[big.LITTLE] Action : Migration demandée de %u vers %u.\n", current_cpu_id, target_cpu);
         
         arch_cpu_ops.migrate_task(current_cpu_id, target_cpu, task_id);
     } else {
-        printf("[big.LITTLE] État : Équilibre optimal pour la tâche %u sur Core %u.\n", task_id, current_cpu_id);
+        kprintf("[big.LITTLE] État : Équilibre optimal pour la tâche %u sur Core %u.\n", task_id, current_cpu_id);
     }
 }

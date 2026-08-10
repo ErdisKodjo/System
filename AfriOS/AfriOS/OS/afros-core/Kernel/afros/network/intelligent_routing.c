@@ -1,5 +1,5 @@
 #include "afros_hal.h"
-#include <stdio.h>
+#include "kprintf.h"
 
 /**
  * @file intelligent_routing.c
@@ -8,11 +8,11 @@
  */
 
 void network_route_packet(uint32_t packet_id, uint32_t interface_id) {
-    printf("Network: Routing packet %u via interface %u using intelligent routing.\n", packet_id, interface_id);
+    kprintf("Network: Routing packet %u via interface %u using intelligent routing.\n", packet_id, interface_id);
     // Determine the optimal route based on network load and signal quality
     
     // Adaptive routing logic
     if (interface_id == 1) { // Example cellular interface
-        printf("Network: Interface 1 has high latency. Rerouting via secondary interface if available.\n");
+        kprintf("Network: Interface 1 has high latency. Rerouting via secondary interface if available.\n");
     }
 }

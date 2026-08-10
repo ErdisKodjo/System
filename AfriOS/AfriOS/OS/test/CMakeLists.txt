@@ -1,6 +1,6 @@
 # Étape 5 (Vérification) : ce fichier n'existait pas alors que le
 # CMakeLists.txt racine appelle add_subdirectory(test) dès que
-# AFRIOS_BUILD_TESTS=ON (vrai par défaut) — la configuration CMake échouait
+# AFROS_BUILD_TESTS=ON (vrai par défaut) — la configuration CMake échouait
 # donc systématiquement avant ce correctif.
 #
 # Chaque module possède ses propres tests, au plus près de son code (voir

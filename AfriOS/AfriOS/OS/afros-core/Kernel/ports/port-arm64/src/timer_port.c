@@ -1,5 +1,5 @@
 #include "timer_abstraction.h"
-#include <stdio.h>
+#include "kprintf.h"
 
 /**
  * @file timer_port.c
@@ -11,7 +11,7 @@ static uint64_t s_ticks = 0;
 
 static afros_status_t timer_init_impl(uint32_t tick_hz) {
     (void)tick_hz;
-    printf("[TIMER] ARM Generic Timer : lecture de CNTFRQ_EL0 = %u Hz\n", s_freq_hz);
+    kprintf("[TIMER] ARM Generic Timer : lecture de CNTFRQ_EL0 = %u Hz\n", s_freq_hz);
     return AFROS_SUCCESS;
 }
 
@@ -29,23 +29,23 @@ static afros_status_t timer_get_frequency_impl(uint32_t *freq_hz) {
 
 static afros_status_t timer_set_oneshot_impl(uint64_t delay_ticks, afros_timer_callback_t cb, void *ctx) {
     (void)cb; (void)ctx;
-    printf("[TIMER] CNTP_TVAL_EL0 = %llu (one-shot)\n", (unsigned long long)delay_ticks);
+    kprintf("[TIMER] CNTP_TVAL_EL0 = %llu (one-shot)\n", (unsigned long long)delay_ticks);
     return AFROS_SUCCESS;
 }
 
 static afros_status_t timer_set_periodic_impl(uint64_t period_ticks, afros_timer_callback_t cb, void *ctx) {
     (void)cb; (void)ctx;
-    printf("[TIMER] CNTP_TVAL_EL0 rechargé toutes les %llu ticks (périodique)\n", (unsigned long long)period_ticks);
+    kprintf("[TIMER] CNTP_TVAL_EL0 rechargé toutes les %llu ticks (périodique)\n", (unsigned long long)period_ticks);
     return AFROS_SUCCESS;
 }
 
 static afros_status_t timer_cancel_impl(void) {
-    printf("[TIMER] CNTP_CTL_EL0.ENABLE = 0\n");
+    kprintf("[TIMER] CNTP_CTL_EL0.ENABLE = 0\n");
     return AFROS_SUCCESS;
 }
 
 static afros_status_t timer_busy_wait_us_impl(uint32_t microseconds) {
-    printf("[TIMER] Attente active %u us (boucle sur CNTPCT_EL0)\n", microseconds);
+    kprintf("[TIMER] Attente active %u us (boucle sur CNTPCT_EL0)\n", microseconds);
     return AFROS_SUCCESS;
 }
 

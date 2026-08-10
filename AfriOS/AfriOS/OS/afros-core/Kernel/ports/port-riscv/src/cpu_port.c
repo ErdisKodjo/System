@@ -1,5 +1,5 @@
 #include "cpu_abstraction.h"
-#include <stdio.h>
+#include "kprintf.h"
 
 /**
  * @file cpu_port.c
@@ -9,7 +9,7 @@
  */
 
 static afros_status_t cpu_init_impl(void) {
-    printf("[CPU] RISC-V : lecture de misa/mvendorid/marchid pour chaque hart...\n");
+    kprintf("[CPU] RISC-V : lecture de misa/mvendorid/marchid pour chaque hart...\n");
     return AFROS_SUCCESS;
 }
 
@@ -27,22 +27,22 @@ static afros_status_t cpu_get_info_impl(uint32_t cpu_id, afros_cpu_info_t *info)
 }
 
 static afros_status_t cpu_set_frequency_impl(uint32_t cpu_id, uint32_t freq_mhz) {
-    printf("[CPU] RISC-V : hart %u -> appel SBI (extension DVFS spécifique plateforme) pour %u MHz.\n", cpu_id, freq_mhz);
+    kprintf("[CPU] RISC-V : hart %u -> appel SBI (extension DVFS spécifique plateforme) pour %u MHz.\n", cpu_id, freq_mhz);
     return AFROS_SUCCESS;
 }
 
 static afros_status_t cpu_sleep_core_impl(uint32_t cpu_id) {
-    printf("[CPU] RISC-V : hart %u -> instruction WFI.\n", cpu_id);
+    kprintf("[CPU] RISC-V : hart %u -> instruction WFI.\n", cpu_id);
     return AFROS_SUCCESS;
 }
 
 static afros_status_t cpu_wakeup_core_impl(uint32_t cpu_id) {
-    printf("[CPU] RISC-V : hart %u -> SBI HSM hart_start / IPI CLINT.\n", cpu_id);
+    kprintf("[CPU] RISC-V : hart %u -> SBI HSM hart_start / IPI CLINT.\n", cpu_id);
     return AFROS_SUCCESS;
 }
 
 static afros_status_t cpu_migrate_task_impl(uint32_t from_cpu, uint32_t to_cpu, uint32_t task_id) {
-    printf("[CPU] RISC-V : tâche %u migrée du hart %u vers le hart %u.\n", task_id, from_cpu, to_cpu);
+    kprintf("[CPU] RISC-V : tâche %u migrée du hart %u vers le hart %u.\n", task_id, from_cpu, to_cpu);
     return AFROS_SUCCESS;
 }
 

@@ -1,5 +1,5 @@
 #include "afros_hal.h"
-#include <stdio.h>
+#include "kprintf.h"
 
 /**
  * @file secure_boot.c
@@ -14,9 +14,9 @@ typedef struct {
 } kernel_signature_t;
 
 void security_verify_boot_integrity(void) {
-    printf("Security: Verifying boot integrity and kernel signature...\n");
+    kprintf("Security: Verifying boot integrity and kernel signature...\n");
     // Perform cryptographic verification of kernel signature
     
     // Defaulting to success for demonstration
-    printf("Security: Boot integrity verified. AfriOS is secure.\n");
+    kprintf("Security: Boot integrity verified. AfriOS is secure.\n");
 }

@@ -1,5 +1,5 @@
 #include "timer_abstraction.h"
-#include <stdio.h>
+#include "kprintf.h"
 
 /**
  * @file timer_port.c
@@ -10,7 +10,7 @@ static uint32_t s_freq_hz = 168000000; // fréquence cœur, ex. STM32F4 @168MHz
 static uint64_t s_ticks = 0;
 
 static afros_status_t timer_init_impl(uint32_t tick_hz) {
-    printf("[TIMER] MCU : SysTick->LOAD calculé pour %u Hz (horloge cœur %u Hz).\n", tick_hz, s_freq_hz);
+    kprintf("[TIMER] MCU : SysTick->LOAD calculé pour %u Hz (horloge cœur %u Hz).\n", tick_hz, s_freq_hz);
     return AFROS_SUCCESS;
 }
 
@@ -28,7 +28,7 @@ static afros_status_t timer_get_frequency_impl(uint32_t *freq_hz) {
 
 static afros_status_t timer_set_oneshot_impl(uint64_t delay_ticks, afros_timer_callback_t cb, void *ctx) {
     (void)cb; (void)ctx;
-    printf("[TIMER] MCU : SysTick->VAL rechargé pour %llu ticks (one-shot, désactivé après déclenchement).\n",
+    kprintf("[TIMER] MCU : SysTick->VAL rechargé pour %llu ticks (one-shot, désactivé après déclenchement).\n",
            (unsigned long long)delay_ticks);
     return AFROS_SUCCESS;
 }
@@ -36,18 +36,18 @@ static afros_status_t timer_set_oneshot_impl(uint64_t delay_ticks, afros_timer_c
 static afros_status_t timer_set_periodic_impl(uint64_t period_ticks, afros_timer_callback_t cb, void *ctx) {
     (void)cb; (void)ctx;
     if (period_ticks > 0xFFFFFF) return AFROS_ERROR_INVALID_PARAM; // SysTick = 24 bits
-    printf("[TIMER] MCU : SysTick->LOAD = %llu (périodique, mode natif du périphérique).\n",
+    kprintf("[TIMER] MCU : SysTick->LOAD = %llu (périodique, mode natif du périphérique).\n",
            (unsigned long long)period_ticks);
     return AFROS_SUCCESS;
 }
 
 static afros_status_t timer_cancel_impl(void) {
-    printf("[TIMER] MCU : SysTick->CTRL.ENABLE = 0\n");
+    kprintf("[TIMER] MCU : SysTick->CTRL.ENABLE = 0\n");
     return AFROS_SUCCESS;
 }
 
 static afros_status_t timer_busy_wait_us_impl(uint32_t microseconds) {
-    printf("[TIMER] MCU : attente active %u us (boucle sur SysTick->VAL)\n", microseconds);
+    kprintf("[TIMER] MCU : attente active %u us (boucle sur SysTick->VAL)\n", microseconds);
     return AFROS_SUCCESS;
 }
 

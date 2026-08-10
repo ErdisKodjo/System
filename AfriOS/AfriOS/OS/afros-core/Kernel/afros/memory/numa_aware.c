@@ -1,5 +1,5 @@
 #include "afros_hal.h"
-#include <stdio.h>
+#include "kprintf.h"
 
 /**
  * @file numa_aware.c
@@ -9,12 +9,12 @@
 void memory_alloc_numa(afros_size_t size, uint32_t node_id) {
     afros_virt_addr_t v_addr;
     
-    printf("[MEM] Demande d'allocation de %zu octets sur le Noeud NUMA %u...\n", size, node_id);
+    kprintf("[MEM] Demande d'allocation de %zu octets sur le Noeud NUMA %u...\n", size, node_id);
     
     // Appel à l'abstraction de mémoire HAL
     if (arch_memory_ops.alloc(size, &v_addr) == AFROS_SUCCESS) {
-        printf("[MEM] Succès : Page allouée à l'adresse virtuelle 0x%llx sur Noeud %u.\n", v_addr, node_id);
+        kprintf("[MEM] Succès : Page allouée à l'adresse virtuelle 0x%llx sur Noeud %u.\n", v_addr, node_id);
     } else {
-        printf("[MEM] Échec : Mémoire insuffisante sur Noeud %u.\n", node_id);
+        kprintf("[MEM] Échec : Mémoire insuffisante sur Noeud %u.\n", node_id);
     }
 }

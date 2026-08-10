@@ -3,42 +3,56 @@
 
 cmake_minimum_required(VERSION 3.16)
 
-project(AfriOS 
+project(AfriOS
     DESCRIPTION "Multi-platform OS with unified runtime"
-    LANGUAGES C CXX
+    LANGUAGES C CXX ASM
 )
 
-set(AFRIOS_VERSION "1.0.0")
+set(AFROS_VERSION "1.0.0")
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-# Options
-option(AFRIOS_BUILD_ANDROID "Build Android framework" ON)
-option(AFRIOS_BUILD_KERNEL "Build AfriOS kernel" ON)
-option(AFRIOS_BUILD_RUNTIME "Build runtime manager" ON)
-option(AFRIOS_BUILD_GRAPHICS "Build graphics subsystem" ON)
-option(AFRIOS_BUILD_TESTS "Build test suite" ON)
-option(AFRIOS_ENABLE_LTO "Enable Link Time Optimization" OFF)
+# Options — la forme canonique est AFROS_* (cohérente avec afros-core/ qui
+# utilise déjà AFROS_PORT etc.). L'ancien préfixe AFRIOS_* reste accepté pour
+# rétro-compatibilité (voir bloc d'alias ci-dessous).
+option(AFROS_BUILD_ANDROID  "Build Android framework"     ON)
+option(AFROS_BUILD_KERNEL   "Build AfriOS kernel"         ON)
+option(AFROS_BUILD_RUNTIME  "Build runtime manager"       ON)
+option(AFROS_BUILD_GRAPHICS "Build graphics subsystem"    ON)
+option(AFROS_BUILD_TESTS    "Build test suite"            ON)
+option(AFROS_ENABLE_LTO     "Enable Link Time Optimization" OFF)
+option(AFROS_FREESTANDING   "Build the kernel freestanding (no libc)" OFF)
+
+# Backward-compat : si un utilisateur/CI passe encore l'ancien nom
+# -D<AFRIOS_*>=... sans le nouveau AFROS_*, on le propage. Une fois l'option
+# AFROS_* explicitement positionnée, l'alias est ignoré.
+foreach(_opt
+        BUILD_ANDROID BUILD_KERNEL BUILD_RUNTIME BUILD_GRAPHICS BUILD_TESTS
+        ENABLE_LTO)
+    if(DEFINED AFRIOS_${_opt} AND NOT DEFINED AFROS_${_opt})
+        set(AFROS_${_opt} ${AFRIOS_${_opt}})
+    endif()
+endforeach()
 
 # Compiler flags
-if(AFRIOS_ENABLE_LTO)
+if(AFROS_ENABLE_LTO)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -flto")
-    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -flto")
+    set(CMAKE_C_FLAGS   "${CMAKE_C_FLAGS}   -flto")
 endif()
 
 # Enable testing
 enable_testing()
 
 # Add subdirectories
-if(AFRIOS_BUILD_KERNEL)
+if(AFROS_BUILD_KERNEL)
     add_subdirectory(afros-core/Kernel)
 endif()
 
-if(AFRIOS_BUILD_ANDROID)
+if(AFROS_BUILD_ANDROID)
     add_subdirectory(afros-androsandbox)
 endif()
 
-if(AFRIOS_BUILD_RUNTIME)
+if(AFROS_BUILD_RUNTIME)
     add_subdirectory(afros-corebridge-core)
 endif()
 
@@ -57,22 +71,23 @@ add_subdirectory(common)
 # Applications
 add_subdirectory(apps/demo_app)
 
-if(AFRIOS_BUILD_GRAPHICS)
+if(AFROS_BUILD_GRAPHICS)
     # add_subdirectory(afros-dxvk)
     message(STATUS "DXVK subproject (commented - requires meson)")
 endif()
 
-if(AFRIOS_BUILD_TESTS)
+if(AFROS_BUILD_TESTS)
     add_subdirectory(test)
 endif()
 
 # Print summary
 message(STATUS "")
-message(STATUS "AfriOS ${AFRIOS_VERSION} Configuration Summary:")
-message(STATUS "  Build Android Framework: ${AFRIOS_BUILD_ANDROID}")
-message(STATUS "  Build Kernel: ${AFRIOS_BUILD_KERNEL}")
-message(STATUS "  Build Runtime Manager: ${AFRIOS_BUILD_RUNTIME}")
-message(STATUS "  Build Graphics: ${AFRIOS_BUILD_GRAPHICS}")
-message(STATUS "  Build Tests: ${AFRIOS_BUILD_TESTS}")
-message(STATUS "  LTO Enabled: ${AFRIOS_ENABLE_LTO}")
+message(STATUS "AfriOS ${AFROS_VERSION} Configuration Summary:")
+message(STATUS "  Build Android Framework: ${AFROS_BUILD_ANDROID}")
+message(STATUS "  Build Kernel:           ${AFROS_BUILD_KERNEL}")
+message(STATUS "  Build Runtime Manager:  ${AFROS_BUILD_RUNTIME}")
+message(STATUS "  Build Graphics:         ${AFROS_BUILD_GRAPHICS}")
+message(STATUS "  Build Tests:            ${AFROS_BUILD_TESTS}")
+message(STATUS "  LTO Enabled:            ${AFROS_ENABLE_LTO}")
+message(STATUS "  Freestanding kernel:    ${AFROS_FREESTANDING}")
 message(STATUS "")

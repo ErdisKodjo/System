@@ -1,5 +1,5 @@
 #include "storage_abstraction.h"
-#include <stdio.h>
+#include "kprintf.h"
 
 /**
  * @file storage_port.c
@@ -8,7 +8,7 @@
  */
 
 static afros_status_t storage_init_impl(void) {
-    printf("[STORAGE] MCU : sonde flash SPI NOR (commande JEDEC ID 0x9F).\n");
+    kprintf("[STORAGE] MCU : sonde flash SPI NOR (commande JEDEC ID 0x9F).\n");
     return AFROS_SUCCESS;
 }
 
@@ -18,7 +18,7 @@ static afros_status_t storage_get_info_impl(uint32_t device_id, afros_storage_in
     info->block_count = 4096; // 4096 secteurs
     info->block_size = 4096;  // secteurs de 4 Ko (taille d'effacement typique)
     info->read_only = true;   // XIP : zone code en lecture seule par défaut
-    printf("[STORAGE] SPI NOR : %llu secteurs de %u octets (lecture seule)\n",
+    kprintf("[STORAGE] SPI NOR : %llu secteurs de %u octets (lecture seule)\n",
            (unsigned long long)info->block_count, info->block_size);
     return AFROS_SUCCESS;
 }
@@ -26,7 +26,7 @@ static afros_status_t storage_get_info_impl(uint32_t device_id, afros_storage_in
 static afros_status_t storage_read_blocks_impl(uint32_t device_id, uint64_t lba, uint32_t count, uint8_t *buffer) {
     (void)buffer;
     if (device_id != 0) return AFROS_ERROR_INVALID_PARAM;
-    printf("[STORAGE] SPI NOR : lecture de %u secteurs depuis 0x%llx (commande READ 0x03/0x0B).\n",
+    kprintf("[STORAGE] SPI NOR : lecture de %u secteurs depuis 0x%llx (commande READ 0x03/0x0B).\n",
            count, (unsigned long long)lba);
     return AFROS_SUCCESS;
 }

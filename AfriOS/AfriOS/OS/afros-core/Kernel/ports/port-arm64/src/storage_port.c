@@ -1,5 +1,5 @@
 #include "storage_abstraction.h"
-#include <stdio.h>
+#include "kprintf.h"
 
 /**
  * @file storage_port.c
@@ -7,7 +7,7 @@
  */
 
 static afros_status_t storage_init_impl(void) {
-    printf("[STORAGE] eMMC/UFS : énumération du contrôleur...\n");
+    kprintf("[STORAGE] eMMC/UFS : énumération du contrôleur...\n");
     return AFROS_SUCCESS;
 }
 
@@ -16,25 +16,25 @@ static afros_status_t storage_get_info_impl(uint32_t device_id, afros_storage_in
     info->block_count = 61047808ULL; // ~29 Go, exemple eMMC
     info->block_size = 512;
     info->read_only = false;
-    printf("[STORAGE] Device %u : %llu blocs de %u octets\n", device_id,
+    kprintf("[STORAGE] Device %u : %llu blocs de %u octets\n", device_id,
            (unsigned long long)info->block_count, info->block_size);
     return AFROS_SUCCESS;
 }
 
 static afros_status_t storage_read_blocks_impl(uint32_t device_id, uint64_t lba, uint32_t count, uint8_t *buffer) {
     (void)buffer;
-    printf("[STORAGE] eMMC device %u : lecture de %u blocs depuis LBA %llu\n", device_id, count, (unsigned long long)lba);
+    kprintf("[STORAGE] eMMC device %u : lecture de %u blocs depuis LBA %llu\n", device_id, count, (unsigned long long)lba);
     return AFROS_SUCCESS;
 }
 
 static afros_status_t storage_write_blocks_impl(uint32_t device_id, uint64_t lba, uint32_t count, const uint8_t *buffer) {
     (void)buffer;
-    printf("[STORAGE] eMMC device %u : écriture de %u blocs depuis LBA %llu\n", device_id, count, (unsigned long long)lba);
+    kprintf("[STORAGE] eMMC device %u : écriture de %u blocs depuis LBA %llu\n", device_id, count, (unsigned long long)lba);
     return AFROS_SUCCESS;
 }
 
 static afros_status_t storage_flush_impl(uint32_t device_id) {
-    printf("[STORAGE] eMMC device %u : flush cache contrôleur\n", device_id);
+    kprintf("[STORAGE] eMMC device %u : flush cache contrôleur\n", device_id);
     return AFROS_SUCCESS;
 }
 

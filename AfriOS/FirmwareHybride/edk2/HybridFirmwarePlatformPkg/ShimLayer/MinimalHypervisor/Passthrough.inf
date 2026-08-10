@@ -1,0 +1,29 @@
+## @file
+# Minimal Hypervisor Passthrough INF file.
+#
+# Library-class module exposing HvPassthroughMmio / HvPassthroughMsi /
+# HvPassthroughIrq backed by the VmcsInit.c primitives.
+#
+# Copyright (c) 2026, AfriOS. All rights reserved.
+##
+
+[Defines]
+  INF_VERSION                    = 0x00010005
+  BASE_NAME                      = PassthroughLib
+  FILE_GUID                      = D4758609-2536-4809-1021-324354657687
+  MODULE_TYPE                    = BASE
+  VERSION_STRING                 = 1.0
+  LIBRARY_CLASS                  = PassthroughLib
+
+[Sources]
+  Passthrough.c
+
+[Packages]
+  MdePkg/MdePkg.dec
+  HybridFirmwarePlatformPkg/HybridFirmwarePlatformPkg.dec
+
+[LibraryClasses]
+  BaseLib
+  BaseMemoryLib
+  MemoryAllocationLib
+  DebugLib

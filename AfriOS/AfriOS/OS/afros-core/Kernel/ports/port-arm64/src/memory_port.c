@@ -1,5 +1,5 @@
 #include "memory_abstraction.h"
-#include <stdio.h>
+#include "kprintf.h"
 
 /**
  * @file memory_port.c
@@ -8,7 +8,7 @@
  */
 
 static afros_status_t memory_init_impl(void) {
-    printf("[MEM] Initialisation de l'allocation NUMA aware...\n");
+    kprintf("[MEM] Initialisation de l'allocation NUMA aware...\n");
     return AFROS_SUCCESS;
 }
 
@@ -20,17 +20,17 @@ static afros_status_t memory_alloc_impl(afros_size_t size, afros_virt_addr_t *v_
     *v_addr = next_addr;
     next_addr += size; // Simple allocation lin�aire pour simulation
     
-    printf("[MEM] Allocation de %zu octets � 0x%llx\n", size, *v_addr);
+    kprintf("[MEM] Allocation de %zu octets � 0x%llx\n", size, *v_addr);
     return AFROS_SUCCESS;
 }
 
 static afros_status_t memory_compress_impl(afros_virt_addr_t v_addr, afros_size_t size) {
-    printf("[MEM] Activation de ZRAM : Compression de %zu octets � 0x%llx (Ratio 4:1)\n", size, v_addr);
+    kprintf("[MEM] Activation de ZRAM : Compression de %zu octets � 0x%llx (Ratio 4:1)\n", size, v_addr);
     return AFROS_SUCCESS;
 }
 
 static afros_status_t memory_decompress_impl(afros_virt_addr_t v_addr, afros_size_t size) {
-    printf("[MEM] D�compression de la page 0x%llx\n", v_addr);
+    kprintf("[MEM] D�compression de la page 0x%llx\n", v_addr);
     return AFROS_SUCCESS;
 }
 

@@ -1,17 +1,20 @@
-#include "afros_hal.h"
-#include <stdio.h>
-#include <stdlib.h>
-
-/**
- * @file hal_smoke_test.c
- * @brief Tests unitaires HAL (étape 5 — voir hal/tests/tests.md pour le plan
- *        complet). Vérifie le CONTRAT que tout port doit respecter, pas le
- *        comportement matériel réel (impossible à tester ici, en hébergé).
+/*
+ * hal_smoke_test.c — Tests unitaires HAL (étape 5 — voir hal/tests/tests.md pour
+ * le plan complet). Vérifie le CONTRAT que tout port doit respecter, pas le
+ * comportement matériel réel (impossible à tester ici, en hébergé).
  *
  * Ce fichier tourne contre le port sélectionné par AFROS_PORT au moment du
  * build (cmake -DAFROS_PORT=<x>) : le même fichier valide donc les 4 ports
  * sans modification, un par exécution de build.
+ *
+ * Hôte uniquement (libc stdio/stdlib) — désactivé en build freestanding où le
+ * runtime hébergé (exit, fprintf, main() retournant à l'OS) n'existe pas.
  */
+#ifndef AFROS_FREESTANDING
+
+#include "afros_hal.h"
+#include <stdio.h>
+#include <stdlib.h>
 
 static int tests_run = 0;
 
@@ -81,9 +84,9 @@ static void test_device_manager_register_reject_duplicate(void) {
     device_ops_t dummy_b = { .device_id = 999, .name = "test-dummy-b" };
 
     CHECK(arch_device_manager_ops.register_device(&dummy_a) == AFROS_SUCCESS);
-    CHECK(arch_device_manager_ops.register_device(&dummy_b) != AFROS_SUCCESS); // id déjà pris
+    CHECK(arch_device_manager_ops.register_device(&dummy_b) != AFROS_SUCCESS); /* id déjà pris */
     CHECK(arch_device_manager_ops.unregister_device(999) == AFROS_SUCCESS);
-    CHECK(arch_device_manager_ops.unregister_device(999) != AFROS_SUCCESS); // déjà retiré
+    CHECK(arch_device_manager_ops.unregister_device(999) != AFROS_SUCCESS); /* déjà retiré */
 
     printf("[TEST] device_manager_register_reject_duplicate: OK\n");
 }
@@ -98,3 +101,9 @@ int main(void) {
     printf("[TEST] %d assertions passees.\n", tests_run);
     return 0;
 }
+
+#else  /* AFROS_FREESTANDING — pas de runtime hébergé pour exécuter un binaire
+        * de test. La cible CMake afros-hal-tests n'est de toute façon pas
+        * construite pour AFROS_PORT=mcu (voir Kernel/CMakeLists.txt). */
+typedef int afros_freestanding_hal_smoke_test_empty_translation_unit;
+#endif /* AFROS_FREESTANDING */

@@ -1,0 +1,171 @@
+/** @file
+  Visual Forms Representation (VFR) for the AfriOS Boot Order setup form.
+
+  Declares a setup form accessible from the HII Setup Browser with:
+    - a oneof control for boot order selection,
+    - a numeric control for boot delay (0..30 seconds),
+    - a checkbox for secure boot enable,
+    - subtitle and text controls for help and labels.
+
+  Copyright (c) 2026, AfriOS. All rights reserved.
+**/
+
+#include "UefiHiiUtils.h"
+
+//
+// Storage layout — must match the struct in BootOrderForm.h (HII package).
+// Declared as a UEFI varstore so the form values persist in NVRAM.
+//
+formset
+  guid     = { 0x7E8F9A0B, 0xC1D2, 0x4E3F, { 0xA5, 0xB6, 0xC7, 0xD8, 0xE9, 0xF0, 0x1A, 0x2B } },
+  title    = STRING_TOKEN(STR_BOOT_ORDER_FORM_TITLE),
+  help     = STRING_TOKEN(STR_BOOT_ORDER_FORM_HELP),
+
+  //
+  // Variable-backed storage for the boot order configuration.
+  //
+  varstore BOOT_ORDER_CONFIG,
+    varid = BOOT_ORDER_CONFIG_VAR_ID,
+    name  = AfriBootOrderConfig,
+    guid  = { 0x7E8F9A0B, 0xC1D2, 0x4E3F, { 0xA5, 0xB6, 0xC7, 0xD8, 0xE9, 0xF0, 0x1A, 0x2B } };
+
+  //
+  // Boot Order Form
+  //
+  form formid = 2,
+    title  = STRING_TOKEN(STR_BOOT_ORDER_FORM_TITLE);
+
+    subtitle text = STRING_TOKEN(STR_BOOT_ORDER_SUBTITLE);
+
+    //
+    // Boot order selection — oneof. The platform populates the option list
+    // dynamically from BootOrder NVRAM at form-open time.
+    //
+    oneof varid = BOOT_ORDER_CONFIG.BootOrder,
+      prompt      = STRING_TOKEN(STR_BOOT_ORDER_PROMPT),
+      help        = STRING_TOKEN(STR_BOOT_ORDER_HELP),
+      flags       = NUMERIC_SIZE_1 | INTERACTIVE | RESET_REQUIRED,
+      option text = STRING_TOKEN(STR_BOOT_OPT_AFRIOS),   value = 0, flags = 0;
+      option text = STRING_TOKEN(STR_BOOT_OPT_LINUX),    value = 1, flags = 0;
+      option text = STRING_TOKEN(STR_BOOT_OPT_WINDOWS),  value = 2, flags = 0;
+      option text = STRING_TOKEN(STR_BOOT_OPT_APPLE),    value = 3, flags = 0;
+      option text = STRING_TOKEN(STR_BOOT_OPT_PXE),      value = 4, flags = 0;
+      option text = STRING_TOKEN(STR_BOOT_OPT_SHELL),    value = 5, flags = 0;
+    endoneof;
+
+    subtitle text = STRING_TOKEN(STR_BOOT_ORDER_SPACER);
+
+    //
+    // Boot delay — numeric. Range 0..30 seconds, default 5.
+    //
+    numeric varid = BOOT_ORDER_CONFIG.BootDelay,
+      prompt       = STRING_TOKEN(STR_BOOT_DELAY_PROMPT),
+      help         = STRING_TOKEN(STR_BOOT_DELAY_HELP),
+      flags        = NUMERIC_SIZE_1 | INTERACTIVE,
+      minimum      = 0,
+      maximum      = 30,
+      step         = 1,
+      default      = 5,
+    endnumeric;
+
+    subtitle text = STRING_TOKEN(STR_BOOT_SECURITY_SUBTITLE);
+
+    //
+    // Secure Boot enable — checkbox.
+    //
+    checkbox varid = BOOT_ORDER_CONFIG.SecureBoot,
+      prompt   = STRING_TOKEN(STR_SECURE_BOOT_PROMPT),
+      help     = STRING_TOKEN(STR_SECURE_BOOT_HELP),
+      flags    = CHECKBOX_DEFAULT,
+      key      = 0x3001,
+      default  = 1,
+    endcheckbox;
+
+    //
+    // Verbose boot — checkbox.
+    //
+    checkbox varid = BOOT_ORDER_CONFIG.VerboseBoot,
+      prompt   = STRING_TOKEN(STR_VERBOSE_BOOT_PROMPT),
+      help     = STRING_TOKEN(STR_VERBOSE_BOOT_HELP),
+      flags    = CHECKBOX_DEFAULT,
+      key      = 0x3002,
+      default  = 0,
+    endcheckbox;
+
+    subtitle text = STRING_TOKEN(STR_BOOT_ORDER_SPACER);
+
+    //
+    // Help / informative text.
+    //
+    text
+      help   = STRING_TOKEN(STR_BOOT_ORDER_HELP),
+      text   = STRING_TOKEN(STR_BOOT_ORDER_HINT),
+      flags  = 0,
+      key    = 0,
+    endtext;
+
+    text
+      help   = STRING_TOKEN(STR_AB_SLOT_HELP),
+      text   = STRING_TOKEN(STR_AB_SLOT_INFO),
+      flags  = 0,
+      key    = 0,
+    endtext;
+
+    //
+    // Interactive save & exit buttons.
+    //
+    text
+      help   = STRING_TOKEN(STR_SAVE_EXIT_HELP),
+      text   = STRING_TOKEN(STR_SAVE_EXIT),
+      flags  = INTERACTIVE,
+      key    = 0x4001,
+    endtext;
+
+    text
+      help   = STRING_TOKEN(STR_DISCARD_EXIT_HELP),
+      text   = STRING_TOKEN(STR_DISCARD_EXIT),
+      flags  = INTERACTIVE,
+      key    = 0x4002,
+    endtext;
+
+    spacer;
+  endform;
+
+  //
+  // Sub-form for advanced boot options.
+  //
+  form formid = 3,
+    title  = STRING_TOKEN(STR_BOOT_ADV_TITLE);
+
+    subtitle text = STRING_TOKEN(STR_BOOT_ADV_SUBTITLE);
+
+    oneof varid = BOOT_ORDER_CONFIG.FallbackBoot,
+      prompt      = STRING_TOKEN(STR_FALLBACK_PROMPT),
+      help        = STRING_TOKEN(STR_FALLBACK_HELP),
+      flags       = NUMERIC_SIZE_1 | INTERACTIVE | RESET_REQUIRED,
+      option text = STRING_TOKEN(STR_FALLBACK_NONE),    value = 0, flags = 0;
+      option text = STRING_TOKEN(STR_FALLBACK_SHELL),   value = 1, flags = 0;
+      option text = STRING_TOKEN(STR_FALLBACK_RECOVERY),value = 2, flags = 0;
+    endoneof;
+
+    numeric varid = BOOT_ORDER_CONFIG.RetryCount,
+      prompt       = STRING_TOKEN(STR_RETRY_PROMPT),
+      help         = STRING_TOKEN(STR_RETRY_HELP),
+      flags        = NUMERIC_SIZE_1 | INTERACTIVE,
+      minimum      = 0,
+      maximum      = 7,
+      step         = 1,
+      default      = 3,
+    endnumeric;
+
+    subtitle text = STRING_TOKEN(STR_BOOT_ORDER_SPACER);
+
+    text
+      help   = STRING_TOKEN(STR_BOOT_ADV_HELP),
+      text   = STRING_TOKEN(STR_BOOT_ADV_HINT),
+      flags  = 0,
+      key    = 0,
+    endtext;
+  endform;
+
+endformset;

@@ -1,5 +1,5 @@
 #include "cpu_abstraction.h"
-#include <stdio.h>
+#include "kprintf.h"
 
 /**
  * @file cpu_port.c
@@ -8,7 +8,7 @@
  */
 
 static afros_status_t cpu_init_impl(void) {
-    printf("[CPU] MCU : cœur unique, PLL système déjà configurée par le startup code.\n");
+    kprintf("[CPU] MCU : cœur unique, PLL système déjà configurée par le startup code.\n");
     return AFROS_SUCCESS;
 }
 
@@ -29,19 +29,19 @@ static afros_status_t cpu_set_frequency_impl(uint32_t cpu_id, uint32_t freq_mhz)
     if (cpu_id != 0) return AFROS_ERROR_INVALID_PARAM;
     // La plupart des MCU ne permettent pas de changer la fréquence à chaud
     // sans reconfigurer la PLL et risquer de désynchroniser les périphériques.
-    printf("[CPU] MCU : changement de fréquence à chaud non supporté sur ce port.\n");
+    kprintf("[CPU] MCU : changement de fréquence à chaud non supporté sur ce port.\n");
     return AFROS_ERROR_NOT_SUPPORTED;
 }
 
 static afros_status_t cpu_sleep_core_impl(uint32_t cpu_id) {
     if (cpu_id != 0) return AFROS_ERROR_INVALID_PARAM;
-    printf("[CPU] MCU : instruction WFI (Wait For Interrupt), mode Sleep.\n");
+    kprintf("[CPU] MCU : instruction WFI (Wait For Interrupt), mode Sleep.\n");
     return AFROS_SUCCESS;
 }
 
 static afros_status_t cpu_wakeup_core_impl(uint32_t cpu_id) {
     if (cpu_id != 0) return AFROS_ERROR_INVALID_PARAM;
-    printf("[CPU] MCU : réveil par interruption NVIC (WFI se termine naturellement).\n");
+    kprintf("[CPU] MCU : réveil par interruption NVIC (WFI se termine naturellement).\n");
     return AFROS_SUCCESS;
 }
 

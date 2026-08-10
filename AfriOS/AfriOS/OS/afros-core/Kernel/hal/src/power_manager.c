@@ -43,7 +43,7 @@ afros_status_t power_manager_init(void) {
 
 afros_status_t power_set_state(power_state_t state) {
     if (state > POWER_STATE_G3) {
-        return AFROS_ERR_INVALID_PARAM;
+        return AFROS_ERROR_INVALID_PARAM;
     }
     
     switch (state) {
@@ -75,7 +75,7 @@ afros_status_t power_set_state(power_state_t state) {
             break;
             
         default:
-            return AFROS_ERR_INVALID_PARAM;
+            return AFROS_ERROR_INVALID_PARAM;
     }
     
     return AFROS_SUCCESS;
@@ -87,7 +87,7 @@ power_state_t power_get_current_state(void) {
 
 afros_status_t power_register_event_handler(power_event_t event, power_event_handler_t handler) {
     if (event >= 8 || handler == NULL) {
-        return AFROS_ERR_INVALID_PARAM;
+        return AFROS_ERROR_INVALID_PARAM;
     }
     
     g_event_handlers[event] = handler;
@@ -96,7 +96,7 @@ afros_status_t power_register_event_handler(power_event_t event, power_event_han
 
 afros_status_t power_unregister_event_handler(power_event_t event) {
     if (event >= 8) {
-        return AFROS_ERR_INVALID_PARAM;
+        return AFROS_ERROR_INVALID_PARAM;
     }
     
     g_event_handlers[event] = NULL;

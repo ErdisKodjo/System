@@ -1,0 +1,42 @@
+## @file
+# UEFI Shell Extensions INF file.
+#
+# Copyright (c) 2026, AfriOS. All rights reserved.
+##
+
+[Defines]
+  INF_VERSION                    = 0x00010005
+  BASE_NAME                      = ShellExtensions
+  FILE_GUID                      = C3647058-1425-4F80-9102-132435465768
+  MODULE_TYPE                    = DXE_DRIVER
+  VERSION_STRING                 = 1.0
+  ENTRY_POINT                    = ShellExtensionsEntryPoint
+
+[Sources]
+  ShellExtensions.c
+
+[Packages]
+  MdePkg/MdePkg.dec
+  MdeModulePkg/MdeModulePkg.dec
+  ShellPkg/ShellPkg.dec
+  HybridFirmwarePlatformPkg/HybridFirmwarePlatformPkg.dec
+
+[LibraryClasses]
+  UefiDriverEntryPoint
+  UefiBootServicesTableLib
+  UefiLib
+  DebugLib
+  MemoryAllocationLib
+  BaseMemoryLib
+  PrintLib
+  ShellLib
+  HiiLib
+
+[Protocols]
+  gEfiShellDynamicCommandProtocolGuid
+  gEfiShellParametersProtocolGuid
+  gEfiPciIoProtocolGuid
+  gEfiSimpleFileSystemProtocolGuid
+
+[Depex]
+  TRUE
