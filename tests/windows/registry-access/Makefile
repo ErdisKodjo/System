@@ -1,16 +1,26 @@
 # Makefile pour registry-access — cross-compile avec mingw-w64 (lié à advapi32).
+#
+# Fallback host gcc + win32-stubs.h si mingw n'est pas installé.
 
-CC ?= x86_64-w64-mingw32-gcc
-TARGET = registry-access.exe
-SRC = source.c
-LIBS = -ladvapi32
+MINGW_CC ?= x86_64-w64-mingw32-gcc
+HOST_CC  ?= gcc
+TARGET   = registry-access.exe
+SRC      = source.c
+WIN_DIR  = ..
+LIBS     = -ladvapi32
 
-.PHONY: all clean
+CROSS_OK := $(shell command -v $(MINGW_CC) 2>/dev/null)
 
-all: $(TARGET)
+.PHONY: all clean syntax-check
 
-$(TARGET): $(SRC)
-	$(CC) -O2 -o $@ $(SRC) $(LIBS)
+all: $(if $(CROSS_OK),$(TARGET),syntax-check)
+
+$(TARGET): $(SRC) $(WIN_DIR)/win32-stubs.h
+	$(MINGW_CC) -O2 -I$(WIN_DIR) -o $@ $(SRC) $(LIBS)
+
+syntax-check: $(SRC) $(WIN_DIR)/win32-stubs.h
+	$(HOST_CC) -fsyntax-only -Wall -I$(WIN_DIR) $(SRC)
+	@touch $@
 
 clean:
-	rm -f $(TARGET)
+	rm -f $(TARGET) syntax-check

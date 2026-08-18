@@ -6,7 +6,11 @@
  * Valide l'émulateur de hive de afros-winbridge.
  */
 #include <stdio.h>
+#include <string.h>
+#include "win32-stubs.h"
+#ifdef _WIN32
 #include <windows.h>
+#endif
 
 int main(void) {
     HKEY hKey;

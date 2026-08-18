@@ -1,0 +1,321 @@
+# AfriOS release workflow
+#
+# Triggered when a tag matching `v*` is pushed (e.g. `v0.1.0`, `v1.0.0-rc1`).
+# Builds every artifact (kernel ×4 archs + firmware ×3 archs + 5 compat
+# layers), computes SHA-256 checksums, and creates a GitHub Release with
+# all artifacts attached via softprops/action-gh-release@v1.
+#
+# Pinned action versions:
+#   actions/checkout@v4, actions/setup-python@v5, actions/cache@v4,
+#   actions/upload-artifact@v4, actions/download-artifact@v4,
+#   softprops/action-gh-release@v1
+# ---------------------------------------------------------------------------
+
+name: AfriOS Release
+
+on:
+  push:
+    tags:
+      - "v*"
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Tag to publish (must already exist in the repo)"
+        required: true
+        default: "v0.0.0-test"
+
+permissions:
+  contents: write   # softprops/action-gh-release needs this to create a release
+
+env:
+  AFROS_OS_ROOT: AfriOS/AfriOS/OS
+  AFROS_FIRMWARE_ROOT: AfriOS/FirmwareHybride
+  PYTHON_VERSION: "3.11"
+  CMAKE_VERSION: "3.27.9"
+
+jobs:
+  # ========================================================================= #
+  # Build jobs — fan out across kernel arches, firmware arches, compat layers. #
+  # Each produces a uniquely-named artifact that's collected by the           #
+  # `release` job below.                                                       #
+  # ========================================================================= #
+
+  kernel-build:
+    name: "Kernel (${{ matrix.arch }})"
+    runs-on: ubuntu-22.04
+    strategy:
+      fail-fast: false
+      matrix:
+        arch: [arm64, x86_64, riscv, mcu]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Install CMake
+        run: pip install --upgrade "cmake==${CMAKE_VERSION}"
+
+      - name: Install cross-toolchain
+        run: |
+          sudo apt-get update -qq
+          case "${{ matrix.arch }}" in
+            arm64)  sudo apt-get install -y --no-install-recommends \
+                        gcc-aarch64-linux-gnu g++-aarch64-linux-gnu ninja-build ccache ;;
+            x86_64) sudo apt-get install -y --no-install-recommends ninja-build ccache ;;
+            riscv)  sudo apt-get install -y --no-install-recommends \
+                        gcc-riscv64-linux-gnu g++-riscv64-linux-gnu ninja-build ccache ;;
+            mcu)    sudo apt-get install -y --no-install-recommends \
+                        gcc-arm-none-eabi ninja-build ccache ;;
+          esac
+
+      - name: Configure + build
+        run: |
+          cmake -B build -S "${AFROS_OS_ROOT}" -G Ninja \
+                -DCMAKE_BUILD_TYPE=Release \
+                -DAFROS_PORT=${{ matrix.arch }} \
+                -DAFROS_BUILD_KERNEL=ON \
+                -DAFROS_BUILD_TESTS=OFF \
+                -DCMAKE_TOOLCHAIN_FILE="${AFROS_OS_ROOT}/cmake/toolchains/toolchain-${{ matrix.arch }}.cmake" \
+                -DCMAKE_C_COMPILER_LAUNCHER=ccache \
+                -DCMAKE_CXX_COMPILER_LAUNCHER=ccache
+          cmake --build build -j"$(nproc)"
+
+      - name: Stage artifact
+        run: |
+          ELF=$(find build -name "afros-kernel*.elf" -type f | head -n1)
+          if [ -z "$ELF" ]; then
+            echo "::warning::No kernel .elf for ${{ matrix.arch }}"
+            exit 0
+          fi
+          cp "$ELF" "afros-kernel-${{ matrix.arch }}.elf"
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-kernel-${{ matrix.arch }}
+          path: afros-kernel-${{ matrix.arch }}.elf
+          if-no-files-found: warn
+
+  firmware-build:
+    name: "Firmware (${{ matrix.edk2_arch }})"
+    runs-on: ubuntu-22.04
+    continue-on-error: true
+    strategy:
+      fail-fast: false
+      matrix:
+        edk2_arch: [X64, AARCH64, RISC-V]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: Install EDK2 host deps
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y --no-install-recommends \
+              build-essential nasm iasl acpica-tools uuid-dev \
+              python3 python3-distutils python3-setuptools \
+              git ninja-build \
+              gcc-aarch64-linux-gnu g++-aarch64-linux-gnu \
+              gcc-riscv64-linux-gnu g++-riscv64-linux-gnu
+
+      - name: Fetch EDK2 deps
+        run: |
+          if [ -x scripts/fetch-deps.sh ]; then
+            scripts/fetch-deps.sh edk2 || exit 0
+          else
+            echo "::warning::scripts/fetch-deps.sh missing — skipping"
+            exit 0
+          fi
+
+      - name: Build firmware
+        run: |
+          cd "${AFROS_FIRMWARE_ROOT}/edk2"
+          [ -f edksetup.sh ] || { echo "EDK2 not fetched"; exit 0; }
+          source edksetup.sh
+          build -p HybridFirmwarePlatformPkg/HybridFirmwarePlatformPkg.dsc \
+                -a ${{ matrix.edk2_arch }} -t GCC5 -b RELEASE
+
+      - name: Stage artifact
+        run: |
+          FD=$(find "${AFROS_FIRMWARE_ROOT}/edk2/Build" -name "*.fd" -type f 2>/dev/null | head -n1 || true)
+          [ -n "$FD" ] && cp "$FD" "afros-firmware-${{ matrix.edk2_arch }}.fd" || true
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-firmware-${{ matrix.edk2_arch }}
+          path: afros-firmware-${{ matrix.edk2_arch }}.fd
+          if-no-files-found: warn
+
+  compat-layer-build:
+    name: "Compat layer (${{ matrix.module }})"
+    runs-on: ubuntu-22.04
+    strategy:
+      fail-fast: false
+      matrix:
+        module: [winbridge, androsandbox, incompat-engine, harmonygate, dxvk]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: Install build deps
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y --no-install-recommends \
+              build-essential cmake ninja-build ccache gcc g++ clang gobjc
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Install CMake
+        run: pip install --upgrade "cmake==${CMAKE_VERSION}"
+
+      - name: Configure + build
+        run: |
+          cmake -B build -S "${AFROS_OS_ROOT}/afros-${{ matrix.module }}" -G Ninja \
+                -DCMAKE_BUILD_TYPE=Release \
+                -DCMAKE_C_COMPILER_LAUNCHER=ccache \
+                -DCMAKE_CXX_COMPILER_LAUNCHER=ccache
+          cmake --build build -j"$(nproc)"
+
+      - name: Stage artifact
+        run: |
+          SO=$(find build -name "libafros-${{ matrix.module }}*.so" -type f | head -n1 || true)
+          [ -n "$SO" ] && cp "$SO" "libafros-${{ matrix.module }}.so" || true
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-compat-${{ matrix.module }}
+          path: libafros-${{ matrix.module }}.so
+          if-no-files-found: warn
+
+  # ========================================================================= #
+  # Release job — collect everything, write SHA-256 checksums, create the     #
+  # GitHub Release via softprops/action-gh-release@v1.                         #
+  # ========================================================================= #
+  release:
+    name: "Publish release"
+    runs-on: ubuntu-22.04
+    needs:
+      - kernel-build
+      - firmware-build
+      - compat-layer-build
+    if: always()
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0    # need tags for the changelog generator
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Resolve tag name
+        id: tag
+        run: |
+          if [ -n "${{ github.event.inputs.tag }}" ]; then
+            echo "name=${{ github.event.inputs.tag }}" >> "$GITHUB_OUTPUT"
+          else
+            echo "name=${GITHUB_REF#refs/tags/}" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: release-staging/
+          pattern: release-*
+          merge-multiple: false
+
+      - name: Flatten staging directory
+        run: |
+          # download-artifact creates one subdir per artifact name; flatten
+          # so we have a single directory of files for sha256sum.
+          mkdir -p release-files
+          find release-staging -type f \( \
+              -name "*.elf" -o -name "*.so" -o -name "*.fd" -o -name "*.a" \
+          \) -exec cp {} release-files/ \;
+          ls -la release-files/
+
+      - name: Generate SHA-256 checksums
+        run: |
+          cd release-files
+          sha256sum * > ../SHA256SUMS.txt
+          cat ../SHA256SUMS.txt
+
+      - name: Generate artifacts manifest (Markdown + JSON)
+        run: |
+          python3 scripts/ci-artifacts-summary.py \
+              release-files/ \
+              --root . \
+              --md-out artifacts-summary.md \
+              --json-out artifacts-summary.json \
+              --label "AfriOS ${{ steps.tag.outputs.name }} artifacts"
+
+      - name: Build release body
+        id: body
+        run: |
+          # Compose the release notes: header + changelog (since previous
+          # tag) + artifacts summary table.
+          {
+            echo "## AfriOS ${{ steps.tag.outputs.name }}"
+            echo ""
+            PREV_TAG=$(git describe --tags --abbrev=0 \
+                       "${{ steps.tag.outputs.name }}^" 2>/dev/null || true)
+            if [ -n "$PREV_TAG" ]; then
+              echo "### Changes since $PREV_TAG"
+              echo ""
+              echo '```'
+              git log --pretty=format:'- %h %s' "$PREV_TAG"..HEAD | head -200
+              echo
+              echo '```'
+            else
+              echo "_First tagged release._"
+            fi
+            echo ""
+            cat artifacts-summary.md
+          } > release-body.md
+          # The multi-line output trick: use the EOF delimiter.
+          echo "path=release-body.md" >> "$GITHUB_OUTPUT"
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: ${{ steps.tag.outputs.name }}
+          name: "AfriOS ${{ steps.tag.outputs.name }}"
+          body_path: release-body.md
+          files: |
+            release-files/*
+            SHA256SUMS.txt
+            artifacts-summary.md
+            artifacts-summary.json
+          draft: false
+          prerelease: ${{ contains(steps.tag.outputs.name, '-') }}
+          fail_on_unmatched_files: false
+          generate_release_notes: false
+
+      - name: Upload manifest as workflow artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-manifest
+          path: |
+            SHA256SUMS.txt
+            artifacts-summary.md
+            artifacts-summary.json
+            release-body.md
+          if-no-files-found: warn
+          retention-days: 90

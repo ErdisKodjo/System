@@ -1,0 +1,678 @@
+# AfriOS CI/CD pipeline
+#
+# This single workflow runs on every push to main/develop and on every PR
+# targeting main, and can be triggered manually via the Actions tab
+# (workflow_dispatch with an `architecture` input to restrict the
+# kernel-build matrix to a single arch).
+#
+# Jobs (all run in parallel where dependencies allow):
+#
+#   1. syntax-check        — fast -fsyntax-only gate on every .c/.cpp/.h/.cc/.m/.S
+#   2. kernel-build        — matrix [arm64, x86_64, riscv, mcu] cross-compile
+#   3. firmware-build      — matrix [X64, AARCH64, RISC-V] EDK2 build (best-effort)
+#   4. hal-tests           — host-build + run hal_smoke_test
+#   5. compat-layer-build  — matrix over the 5 compat-layer modules
+#   6. docs-build          — verifies PDF + white paper + markdown links
+#   7. worklog-validation  — checks WORKLOG-COMPLETION.md agent sections
+#
+# Caches: ~/.ccache, build/, ~/.cache/pip
+# Concurrency: per-branch, cancel-in-progress
+#
+# Pinned action versions (no @main / @latest):
+#   actions/checkout@v4, actions/setup-python@v5, actions/cache@v4,
+#   actions/upload-artifact@v4, actions/download-artifact@v4
+# ---------------------------------------------------------------------------
+
+name: AfriOS CI
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      architecture:
+        description: "Restrict kernel-build matrix to a single arch (any = all)"
+        required: false
+        default: "any"
+        type: choice
+        options:
+          - any
+          - arm64
+          - x86_64
+          - riscv
+          - mcu
+
+# Cancel superseded runs on the same ref so a force-push doesn't queue
+# two builds of the same branch.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+# Default permissions for the GITHUB_TOKEN — read-only is enough for CI.
+permissions:
+  contents: read
+  checks: write
+
+env:
+  # Shared environment for every job — keeps the CMake invocation in
+  # kernel-build / compat-layer-build consistent.
+  AFROS_OS_ROOT: AfriOS/AfriOS/OS
+  AFROS_FIRMWARE_ROOT: AfriOS/FirmwareHybride
+  PYTHON_VERSION: "3.11"
+  CMAKE_VERSION: "3.27.9"
+
+jobs:
+  # ========================================================================= #
+  # Job 1 — syntax-check                                                      #
+  # Fast (~2 min) -fsyntax-only gate on every source file in the repo.        #
+  # Runs always, even on PRs that don't touch the build matrix.               #
+  # ========================================================================= #
+  syntax-check:
+    name: "Syntax check (all sources)"
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Cache pip
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pip
+          key: pip-syntax-${{ runner.os }}-${{ hashFiles('scripts/ci-syntax-check.py') }}
+          restore-keys: |
+            pip-syntax-${{ runner.os }}-
+
+      - name: Install native syntax-check toolchain
+        run: |
+          # gcc/g++ ship with the runner image; we add gobjc so .m files
+          # are actually checked instead of skipped.
+          sudo apt-get update -qq
+          sudo apt-get install -y --no-install-recommends \
+              gobjc nasm acpica-tools
+
+      - name: Run parallel syntax checker
+        run: |
+          python3 scripts/ci-syntax-check.py . \
+              --workers "$(nproc)" \
+              --exclude AfriOS/FirmwareHybride/edk2 \
+              --exclude AfriOS/AfriOS/OS/afros-dxvk/build_test
+
+  # ========================================================================= #
+  # Job 2 — kernel-build                                                      #
+  # Cross-compile the AfriOS kernel for arm64 / x86_64 / riscv / mcu.         #
+  # Each arch installs its own cross-toolchain, then runs CMake configure +   #
+  # build, then uploads the resulting .elf as a workflow artifact.            #
+  # ========================================================================= #
+  kernel-build:
+    name: "Kernel build (${{ matrix.arch }})"
+    runs-on: ubuntu-22.04
+    strategy:
+      fail-fast: false
+      matrix:
+        arch: [arm64, x86_64, riscv, mcu]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      # workflow_dispatch.architecture lets a human restrict the matrix to
+      # a single arch. When set to `any` (the default), every arch builds.
+      - name: Apply architecture filter
+        id: arch_filter
+        run: |
+          set -eu
+          SELECTED="${{ github.event.inputs.architecture || 'any' }}"
+          if [ "$SELECTED" != "any" ] && [ "$SELECTED" != "${{ matrix.arch }}" ]; then
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+            echo "Skipping — architecture filter is '$SELECTED'"
+          else
+            echo "skip=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Set up Python
+        if: steps.arch_filter.outputs.skip != 'true'
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Install CMake
+        if: steps.arch_filter.outputs.skip != 'true'
+        run: |
+          pip install --upgrade "cmake==${CMAKE_VERSION}"
+          cmake --version
+
+      - name: Cache ccache + build dir
+        if: steps.arch_filter.outputs.skip != 'true'
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.ccache
+            build-kernel-${{ matrix.arch }}
+          key: kernel-${{ matrix.arch }}-${{ github.sha }}
+          restore-keys: |
+            kernel-${{ matrix.arch }}-
+
+      - name: Install cross-toolchain (${{ matrix.arch }})
+        if: steps.arch_filter.outputs.skip != 'true'
+        run: |
+          set -eu
+          sudo apt-get update -qq
+          case "${{ matrix.arch }}" in
+            arm64)
+              sudo apt-get install -y --no-install-recommends \
+                  gcc-aarch64-linux-gnu g++-aarch64-linux-gnu
+              ;;
+            x86_64)
+              # Native x86_64 — gcc/g++ ship with the runner image.
+              gcc --version
+              ;;
+            riscv)
+              sudo apt-get install -y --no-install-recommends \
+                  gcc-riscv64-linux-gnu g++-riscv64-linux-gnu
+              ;;
+            mcu)
+              sudo apt-get install -y --no-install-recommends \
+                  gcc-arm-none-eabi
+              ;;
+            *)
+              echo "Unknown arch: ${{ matrix.arch }}"; exit 1;;
+          esac
+          # Useful for everyone.
+          sudo apt-get install -y --no-install-recommends \
+              ninja-build ccache
+
+      - name: Configure CMake (${{ matrix.arch }})
+        if: steps.arch_filter.outputs.skip != 'true'
+        run: |
+          mkdir -p build-kernel-${{ matrix.arch }}
+          cmake -B build-kernel-${{ matrix.arch }} \
+                -S "${AFROS_OS_ROOT}" \
+                -G Ninja \
+                -DCMAKE_BUILD_TYPE=Release \
+                -DAFROS_PORT=${{ matrix.arch }} \
+                -DAFROS_BUILD_KERNEL=ON \
+                -DAFROS_BUILD_TESTS=OFF \
+                -DCMAKE_TOOLCHAIN_FILE="${AFROS_OS_ROOT}/cmake/toolchains/toolchain-${{ matrix.arch }}.cmake" \
+                -DCMAKE_C_COMPILER_LAUNCHER=ccache \
+                -DCMAKE_CXX_COMPILER_LAUNCHER=ccache
+
+      - name: Build kernel (${{ matrix.arch }})
+        if: steps.arch_filter.outputs.skip != 'true'
+        run: |
+          cmake --build build-kernel-${{ matrix.arch }} -j"$(nproc)"
+
+      - name: Locate built ELF
+        if: steps.arch_filter.outputs.skip != 'true'
+        id: locate_elf
+        run: |
+          set -eu
+          ELF=$(find build-kernel-${{ matrix.arch }} \
+                    -name "afros-kernel*.elf" -type f | head -n1 || true)
+          if [ -z "$ELF" ]; then
+            echo "warn=no-elf" >> "$GITHUB_OUTPUT"
+            echo "::warning::No .elf produced by the ${{ matrix.arch }} build"
+          else
+            echo "found=$ELF" >> "$GITHUB_OUTPUT"
+            cp "$ELF" "afros-kernel-${{ matrix.arch }}.elf"
+            ls -la "afros-kernel-${{ matrix.arch }}.elf"
+          fi
+
+      - name: Upload kernel artifact
+        if: steps.arch_filter.outputs.skip != 'true' && steps.locate_elf.outputs.found
+        uses: actions/upload-artifact@v4
+        with:
+          name: afros-kernel-${{ matrix.arch }}
+          path: afros-kernel-${{ matrix.arch }}.elf
+          if-no-files-found: warn
+          retention-days: 14
+
+  # ========================================================================= #
+  # Job 3 — firmware-build                                                    #
+  # Build the EDK2 hybrid firmware for X64 / AARCH64 / RISC-V.                #
+  # continue-on-error: true because EDK2 is not yet vendorized into the      #
+  # repo; once `scripts/fetch-deps.sh edk2` reliably produces a buildable    #
+  # tree, this can be flipped to a hard gate.                                 #
+  # ========================================================================= #
+  firmware-build:
+    name: "Firmware build (${{ matrix.edk2_arch }})"
+    runs-on: ubuntu-22.04
+    continue-on-error: true
+    strategy:
+      fail-fast: false
+      matrix:
+        edk2_arch: [X64, AARCH64, RISC-V]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Install EDK2 host dependencies
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y --no-install-recommends \
+              build-essential nasm iasl acpica-tools uuid-dev \
+              python3 python3-distutils python3-setuptools \
+              git git-core ninja-build \
+              gcc-aarch64-linux-gnu g++-aarch64-linux-gnu \
+              gcc-riscv64-linux-gnu g++-riscv64-linux-gnu
+
+      - name: Fetch EDK2 deps (best-effort)
+        run: |
+          # scripts/fetch-deps.sh edk2 — if the script doesn't exist or
+          # fails, this job is allowed to continue and the subsequent
+          # `build` step will simply fail (continue-on-error is set).
+          if [ -x scripts/fetch-deps.sh ]; then
+            scripts/fetch-deps.sh edk2 || {
+              echo "::warning::scripts/fetch-deps.sh edk2 failed; EDK2 build may fail"
+              exit 0
+            }
+          else
+            echo "::warning::scripts/fetch-deps.sh not found; skipping EDK2 fetch"
+          fi
+
+      - name: Build firmware (${{ matrix.edk2_arch }})
+        run: |
+          set -e
+          cd "${AFROS_FIRMWARE_ROOT}/edk2"
+          # edksetup.sh needs to be sourced to populate WORKSPACE etc.
+          # It only works if the EDK2 tree was actually fetched above.
+          if [ ! -f edksetup.sh ]; then
+            echo "::warning::edksetup.sh missing — EDK2 not fetched, skipping"
+            exit 0
+          fi
+          source edksetup.sh
+          build -p HybridFirmwarePlatformPkg/HybridFirmwarePlatformPkg.dsc \
+                -a ${{ matrix.edk2_arch }} \
+                -t GCC5 \
+                -b RELEASE
+
+      - name: Locate built firmware image
+        id: locate_fd
+        run: |
+          set +e
+          FD=$(find "${AFROS_FIRMWARE_ROOT}/edk2/Build" \
+                    -name "*.fd" -type f 2>/dev/null | head -n1 || true)
+          if [ -n "$FD" ]; then
+            cp "$FD" "afros-firmware-${{ matrix.edk2_arch }}.fd"
+            echo "found=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "found=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Upload firmware artifact
+        if: steps.locate_fd.outputs.found == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: afros-firmware-${{ matrix.edk2_arch }}
+          path: afros-firmware-${{ matrix.edk2_arch }}.fd
+          if-no-files-found: warn
+          retention-days: 14
+
+  # ========================================================================= #
+  # Job 4 — hal-tests                                                         #
+  # Builds + runs the HAL smoke test on the host (x86_64) — this is the       #
+  # only job that actually executes a test binary inside the CI runner.       #
+  # ========================================================================= #
+  hal-tests:
+    name: "HAL smoke test (host x86_64)"
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: Install host toolchain
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y --no-install-recommends \
+              build-essential cmake ninja-build
+
+      - name: Build hal_smoke_test
+        run: |
+          mkdir -p build-hal-test
+          # Direct gcc invocation is simpler than going through CMake for a
+          # single TU; -Dhost_build=1 matches the convention used by
+          # hal_smoke_test.c (the file is wrapped in #ifndef AFROS_FREESTANDING).
+          gcc -std=c11 -Wall -Wextra -Werror \
+              -Dhost_build=1 \
+              -I"${AFROS_OS_ROOT}/afros-core/Kernel/hal/include" \
+              "${AFROS_OS_ROOT}/afros-core/Kernel/hal/tests/hal_smoke_test.c" \
+              -o build-hal-test/hal_smoke_test
+
+      - name: Run hal_smoke_test
+        run: |
+          ./build-hal-test/hal_smoke_test
+          echo "hal_smoke_test exited with status $?"
+
+      - name: Report result
+        if: always()
+        run: |
+          if [ -x build-hal-test/hal_smoke_test ]; then
+            echo "::notice::HAL smoke test binary built and executed successfully"
+          else
+            echo "::error::HAL smoke test binary was not produced"
+            exit 1
+          fi
+
+  # ========================================================================= #
+  # Job 5 — compat-layer-build                                                #
+  # Builds each of the 5 compatibility-layer shared libraries.               #
+  # ========================================================================= #
+  compat-layer-build:
+    name: "Compat layer (${{ matrix.module }})"
+    runs-on: ubuntu-22.04
+    strategy:
+      fail-fast: false
+      matrix:
+        module: [winbridge, androsandbox, incompat-engine, harmonygate, dxvk]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: Install build deps
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y --no-install-recommends \
+              build-essential cmake ninja-build ccache \
+              gcc g++ clang gobjc
+          # gobjc is for afros-incompat-engine's .m sources. On runners
+          # without gobjc, the module's CMakeLists.txt probes the compiler
+          # and falls back to tagging .m files as LANGUAGE C with -x objective-c
+          # (configure succeeds, build fails with a clear cc1obj-missing error).
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Install CMake
+        run: |
+          pip install --upgrade "cmake==${CMAKE_VERSION}"
+          cmake --version
+
+      - name: Cache ccache + build dir
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.ccache
+            build-compat-${{ matrix.module }}
+          key: compat-${{ matrix.module }}-${{ github.sha }}
+          restore-keys: |
+            compat-${{ matrix.module }}-
+
+      - name: Configure CMake (${{ matrix.module }})
+        run: |
+          mkdir -p build-compat-${{ matrix.module }}
+          cmake -B build-compat-${{ matrix.module }} \
+                -S "${AFROS_OS_ROOT}/afros-${{ matrix.module }}" \
+                -G Ninja \
+                -DCMAKE_BUILD_TYPE=Release \
+                -DCMAKE_C_COMPILER_LAUNCHER=ccache \
+                -DCMAKE_CXX_COMPILER_LAUNCHER=ccache
+
+      - name: Build (${{ matrix.module }})
+        run: |
+          cmake --build build-compat-${{ matrix.module }} -j"$(nproc)"
+
+      - name: Locate built .so
+        id: locate_so
+        run: |
+          set +e
+          SO=$(find build-compat-${{ matrix.module }} \
+                    -name "libafros-${{ matrix.module }}*.so" -type f \
+                    | head -n1 || true)
+          if [ -n "$SO" ]; then
+            cp "$SO" "libafros-${{ matrix.module }}.so"
+            echo "found=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "found=false" >> "$GITHUB_OUTPUT"
+            echo "::warning::No libafros-${{ matrix.module }}.so produced"
+          fi
+
+      - name: Upload compat-layer artifact
+        if: steps.locate_so.outputs.found == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: libafros-${{ matrix.module }}
+          path: libafros-${{ matrix.module }}.so
+          if-no-files-found: warn
+          retention-days: 14
+
+  # ========================================================================= #
+  # Job 6 — docs-build                                                        #
+  # Verifies the analysis PDF + white paper are present and that markdown     #
+  # links are not broken (best-effort — markdown-link-check may not be        #
+  # installed, in which case we skip with a notice).                          #
+  # ========================================================================= #
+  docs-build:
+    name: "Docs verification"
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: Set up Node (for markdown-link-check)
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Verify analysis PDF exists
+        run: |
+          PDF="AfriOS/ANALYSE-APPROFONDIE.pdf"
+          if [ ! -f "$PDF" ]; then
+            echo "::error::Analysis PDF not found at $PDF"
+            exit 1
+          fi
+          # Sanity: file should be non-empty and have a %PDF magic.
+          head -c 4 "$PDF" | grep -q '%PDF' || {
+            echo "::error::$PDF is not a valid PDF (missing %PDF magic)"
+            exit 1
+          }
+          echo "Analysis PDF OK ($(stat -c%s "$PDF") bytes)"
+
+      - name: Verify firmware white paper exists
+        run: |
+          WP="AfriOS/FirmwareHybride/docs/security_whitepaper.pdf"
+          if [ ! -f "$WP" ]; then
+            echo "::error::Security white paper not found at $WP"
+            exit 1
+          fi
+          head -c 4 "$WP" | grep -q '%PDF' || {
+            echo "::error::$WP is not a valid PDF"
+            exit 1
+          }
+          echo "White paper OK ($(stat -c%s "$WP") bytes)"
+
+      - name: Install markdown-link-check (best-effort)
+        id: mlc_install
+        continue-on-error: true
+        run: |
+          npm install -g markdown-link-check@3.12.2
+          echo "installed=true" >> "$GITHUB_OUTPUT"
+
+      - name: Run markdown link checker
+        if: steps.mlc_install.outputs.installed == 'true'
+        run: |
+          # Find all .md files under AfriOS/ and run markdown-link-check on
+          # each. Allow individual files to fail without aborting the whole
+          # job — we collect a summary at the end.
+          set +e
+          mkdir -p mlc_reports
+          FAIL=0
+          while IFS= read -r f; do
+            rel="${f#./}"
+            out="mlc_reports/$(echo "$rel" | tr '/ ' '__').json"
+            markdown-link-check --quiet --config .github/mlc-config.json "$f" > "$out" 2>&1
+            rc=$?
+            if [ $rc -ne 0 ]; then
+              FAIL=$((FAIL+1))
+              echo "::warning::Broken links in $rel (see $out)"
+            fi
+          done < <(find AfriOS -name "*.md" -not -path "*/node_modules/*")
+          echo "markdown-link-check: $FAIL file(s) with broken links"
+          # Don't fail the job on broken links (advisory only).
+          exit 0
+
+      - name: Upload link-check reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: markdown-link-check-reports
+          path: mlc_reports/
+          if-no-files-found: ignore
+          retention-days: 7
+
+  # ========================================================================= #
+  # Job 7 — worklog-validation                                                #
+  # Verifies AfriOS/WORKLOG-COMPLETION.md exists and contains a complete      #
+  # section for every agent (Task ID / Agent / Task / Work Log / Stage        #
+  # Summary).                                                                 #
+  # ========================================================================= #
+  worklog-validation:
+    name: "Worklog validation"
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Validate WORKLOG-COMPLETION.md
+        run: |
+          set -eu
+          WL="AfriOS/WORKLOG-COMPLETION.md"
+          if [ ! -f "$WL" ]; then
+            echo "::error::$WL not found"
+            exit 1
+          fi
+          echo "Found $WL ($(wc -l < "$WL") lines)"
+
+          # Each agent section starts with `---` followed (eventually) by
+          # `Task ID:`. Between two such markers all five required fields
+          # must appear at least once.
+          python3 - "$WL" <<'PY'
+          import re, sys
+          path = sys.argv[1]
+          text = open(path, encoding="utf-8").read()
+          # Split into sections on lines that are exactly "---" (the
+          # section delimiter). The preamble before the first "---" is
+          # the file header (mission context, agent protocol) — skip it.
+          parts = re.split(r"^---\s*$", text, flags=re.MULTILINE)
+          required = ["Task ID", "Agent", "Task", "Work Log", "Stage Summary"]
+          errors = []
+          agents_found = 0
+          # Skip parts[0] (the preamble) — it's not an agent section.
+          for i, part in enumerate(parts[1:], 1):
+              # Only treat as an agent section if it contains "Task ID:".
+              if not re.search(r"^Task ID\s*:", part, re.MULTILINE):
+                  continue
+              agents_found += 1
+              # Extract the Task ID for clearer error messages.
+              tid_match = re.search(r"^Task ID\s*:\s*(\S+)", part, re.MULTILINE)
+              tid = tid_match.group(1) if tid_match else f"section#{i}"
+              for field in required:
+                  if not re.search(rf"(^|\n)\s*[-*]?\s*\**{re.escape(field)}\s*[:\b]",
+                                    part):
+                      errors.append(f"  [{tid}] missing field: {field}")
+          if agents_found == 0:
+              print("::error::No agent sections found in WORKLOG-COMPLETION.md")
+              sys.exit(1)
+          if errors:
+              print(f"::error::{len(errors)} missing field(s) across "
+                    f"{agents_found} agent section(s):")
+              for e in errors:
+                  print(e)
+              sys.exit(1)
+          print(f"OK: {agents_found} agent section(s), all required fields present.")
+          PY
+
+      - name: Report
+        if: always()
+        run: |
+          echo "Worklog validation ${{ job.status }}"
+
+  # ========================================================================= #
+  # Job 8 (aggregator) — collect artifacts + emit summary                     #
+  # Runs after all build jobs to download their artifacts, generate the        #
+  # artifacts-summary.md / .json manifest, and write it to the run's          #
+  # GITHUB_STEP_SUMMARY. This is not in the original 7-job spec but makes      #
+  # the artifacts discoverable from the PR / commit UI.                       #
+  # ========================================================================= #
+  artifacts-summary:
+    name: "Artifacts summary"
+    runs-on: ubuntu-22.04
+    needs:
+      - kernel-build
+      - firmware-build
+      - compat-layer-build
+    if: always()
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Download all build artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: build-artifacts/
+          # Merge everything into one tree so the summary script can walk
+          # it as a single root.
+
+      - name: Generate artifacts summary
+        run: |
+          # The download-artifact action creates one subdir per artifact
+          # name; we treat the whole tree as a build root.
+          ls -la build-artifacts/ || true
+          python3 scripts/ci-artifacts-summary.py \
+              build-artifacts/ \
+              --root . \
+              --md-out artifacts-summary.md \
+              --json-out artifacts-summary.json
+
+      - name: Append summary to GITHUB_STEP_SUMMARY
+        run: |
+          if [ -f artifacts-summary.md ]; then
+            cat artifacts-summary.md >> "$GITHUB_STEP_SUMMARY"
+          fi
+
+      - name: Upload manifest
+        uses: actions/upload-artifact@v4
+        with:
+          name: artifacts-manifest
+          path: |
+            artifacts-summary.md
+            artifacts-summary.json
+          if-no-files-found: warn
+          retention-days: 30

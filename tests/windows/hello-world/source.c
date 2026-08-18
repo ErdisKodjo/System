@@ -6,7 +6,10 @@
  * fonctionnent.
  */
 #include <stdio.h>
+#include "win32-stubs.h"
+#ifdef _WIN32
 #include <windows.h>
+#endif
 
 int main(void) {
     printf("Hello, AfriOS!\n");

@@ -146,12 +146,27 @@ def collect_include_paths(root: Path) -> list[str]:
     Passing them all as `-I` lets the syntax checker resolve any project
     header from any translation unit — looser than per-module CMake config
     but exactly what we want for a fast CI gate.
+
+    Also collects test-specific stub directories (e.g. `tests/windows/`
+    which contains `win32-stubs.h` for cross-compilation test sources).
     """
     includes = []
     for dirpath, dirnames, _ in os.walk(root):
         dirnames[:] = [d for d in dirnames if d not in EXCLUDE_DIRS]
         if os.path.basename(dirpath) == "include":
             includes.append(dirpath)
+    # Add test-specific stub directories so cross-compilation test sources
+    # (e.g. Windows tests that need win32-stubs.h on a Linux host) can resolve
+    # their stub headers during syntax-check.
+    test_stubs = [
+        root / "tests" / "windows",       # win32-stubs.h
+        root / "tests" / "android",       # android stubs (if any)
+        root / "tests" / "ios",           # iOS stubs (if any)
+        root / "tests" / "harmonyos",     # HarmonyOS stubs (if any)
+    ]
+    for stub in test_stubs:
+        if stub.is_dir():
+            includes.append(str(stub))
     return includes
 
 

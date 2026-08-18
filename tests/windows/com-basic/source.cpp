@@ -6,8 +6,11 @@
  * Valide le runtime COM de afros-winbridge.
  */
 #include <stdio.h>
+#include "win32-stubs.h"
+#ifdef _WIN32
 #include <windows.h>
 #include <objbase.h>
+#endif
 
 /* CLSID_XMLDocument — on utilise CoCreateInstance avec le CLSID connu
  * de MSXML2::DOMDocument ({F6D90F11-9C73-11D3-B32E-00C04F990BB4}). */

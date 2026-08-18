@@ -1,0 +1,93 @@
+# CODEOWNERS — AfriOS
+#
+# Format: <path-pattern> <@owner1> <@owner2> ...
+#
+# Patterns are matched in order; the LAST matching pattern wins (same
+# semantics as .gitignore). The owner(s) of a path are automatically
+# requested as reviewers on PRs that touch it.
+#
+# Placeholder GitHub usernames are used here — replace with real team
+# handles once the AfriOS GitHub org is created.
+# ---------------------------------------------------------------------------
+
+# Default: the project lead reviews anything that doesn't match a more
+# specific rule below.
+*                                          @ErdisKodjo
+
+# --------------------------------------------------------------------------- #
+# Firmware (UEFI/EDK2 hybrid)                                                #
+# --------------------------------------------------------------------------- #
+AfriOS/FirmwareHybride/                    @ErdisKodjo/firmware-team
+AfriOS/FirmwareHybride/edk2/               @ErdisKodjo/firmware-team
+AfriOS/FirmwareHybride/Scripts/            @ErdisKodjo/firmware-team
+AfriOS/FirmwareHybride/docs/               @ErdisKodjo/firmware-team
+AfriOS/FirmwareHybride/Tests/              @ErdisKodjo/firmware-team
+
+# --------------------------------------------------------------------------- #
+# Kernel + HAL                                                                #
+# --------------------------------------------------------------------------- #
+AfriOS/AfriOS/OS/afros-core/               @ErdisKodjo/kernel-team
+AfriOS/AfriOS/OS/afros-core/Kernel/        @ErdisKodjo/kernel-team
+AfriOS/AfriOS/OS/afros-core/Kernel/hal/    @ErdisKodjo/kernel-team
+AfriOS/AfriOS/OS/afros-core/Kernel/ports/  @ErdisKodjo/kernel-team
+AfriOS/AfriOS/OS/afros-core/Kernel/afros/  @ErdisKodjo/kernel-team
+AfriOS/AfriOS/OS/afros-core/Kernel/drivers/ @ErdisKodjo/kernel-team
+AfriOS/AfriOS/OS/afros-core/Kernel/bootmanager/ @ErdisKodjo/kernel-team
+AfriOS/AfriOS/OS/afros-core/Kernel/vfs/    @ErdisKodjo/kernel-team
+AfriOS/AfriOS/OS/afros-core/Kernel/hypervisor/ @ErdisKodjo/kernel-team
+AfriOS/AfriOS/OS/afros-core/Kernel/compat/ @ErdisKodjo/kernel-team
+
+# --------------------------------------------------------------------------- #
+# CoreBridge orchestrator                                                     #
+# --------------------------------------------------------------------------- #
+AfriOS/AfriOS/OS/afros-corebridge-core/    @ErdisKodjo/orchestrator-team
+AfriOS/AfriOS/OS/afros-babelbridge-core/   @ErdisKodjo/orchestrator-team
+
+# --------------------------------------------------------------------------- #
+# Compatibility layers (one team each — these are large, specialized)         #
+# --------------------------------------------------------------------------- #
+AfriOS/AfriOS/OS/afros-winbridge/          @ErdisKodjo/winbridge-team
+AfriOS/AfriOS/OS/afros-androsandbox/       @ErdisKodjo/android-team
+AfriOS/AfriOS/OS/afros-incompat-engine/    @ErdisKodjo/apple-team
+AfriOS/AfriOS/OS/afros-harmonygate/        @ErdisKodjo/harmony-team
+AfriOS/AfriOS/OS/afros-dxvk/               @ErdisKodjo/graphics-team
+
+# --------------------------------------------------------------------------- #
+# Supporting modules (network, storage, power, infra, sdk, pkg-mgr)           #
+# --------------------------------------------------------------------------- #
+AfriOS/AfriOS/OS/afros-network/            @ErdisKodjo/kernel-team
+AfriOS/AfriOS/OS/afros-storage/            @ErdisKodjo/kernel-team
+AfriOS/AfriOS/OS/afros-power-management/   @ErdisKodjo/kernel-team
+AfriOS/AfriOS/OS/afros-infrastructure/     @ErdisKodjo/orchestrator-team
+AfriOS/AfriOS/OS/afros-sdk/                @ErdisKodjo/orchestrator-team
+AfriOS/AfriOS/OS/afros-package-manager/    @ErdisKodjo/orchestrator-team
+AfriOS/AfriOS/OS/common/                   @ErdisKodjo/kernel-team
+AfriOS/AfriOS/OS/apps/                     @ErdisKodjo/orchestrator-team
+AfriOS/AfriOS/OS/test/                     @ErdisKodjo/qa-team
+AfriOS/AfriOS/OS/afros-integration-tests/  @ErdisKodjo/qa-team
+
+# --------------------------------------------------------------------------- #
+# Build system + CI/CD                                                        #
+# --------------------------------------------------------------------------- #
+AfriOS/AfriOS/OS/CMakeLists.txt            @ErdisKodjo/build-team
+AfriOS/AfriOS/OS/cmake/                    @ErdisKodjo/build-team
+AfriOS/AfriOS/OS/Makefile                  @ErdisKodjo/build-team
+AfriOS/AfriOS/OS/scripts/                  @ErdisKodjo/build-team
+AfriOS/build.ps1                           @ErdisKodjo/build-team
+AfriOS/AfriOS/afros-build.ps1              @ErdisKodjo/build-team
+
+# CI/CD + repository-level config (the files this CI agent owns).
+/.github/                                  @ErdisKodjo/build-team
+/scripts/                                  @ErdisKodjo/build-team
+
+# --------------------------------------------------------------------------- #
+# Documentation                                                               #
+# --------------------------------------------------------------------------- #
+AfriOS/AfriOS/OS/afros-docs/               @ErdisKodjo/docs-team
+AfriOS/AfriOS/OS/docs/                     @ErdisKodjo/docs-team
+AfriOS/AfriOS/OS/CONTRIBUTING.md           @ErdisKodjo/docs-team
+AfriOS/AfriOS/OS/README.md                 @ErdisKodjo/docs-team
+AfriOS/RECOMPOSITION-RAPPORT-FINAL.md      @ErdisKodjo/docs-team
+AfriOS/ANALYSE-APPROFONDIE.pdf             @ErdisKodjo/docs-team
+AfriOS/WORKLOG-COMPLETION.md               @ErdisKodjo/build-team
+/worklog.md                                @ErdisKodjo/build-team

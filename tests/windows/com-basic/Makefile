@@ -1,16 +1,26 @@
 # Makefile pour com-basic — cross-compile avec mingw-w64 (C++ + ole32).
+#
+# Fallback host g++ + win32-stubs.h si mingw n'est pas installé.
 
-CXX ?= x86_64-w64-mingw32-g++
-TARGET = com-basic.exe
-SRC = source.cpp
-LIBS = -lole32 -loleaut32
+MINGW_CXX ?= x86_64-w64-mingw32-g++
+HOST_CXX  ?= g++
+TARGET    = com-basic.exe
+SRC       = source.cpp
+WIN_DIR   = ..
+LIBS      = -lole32 -loleaut32
 
-.PHONY: all clean
+CROSS_OK := $(shell command -v $(MINGW_CXX) 2>/dev/null)
 
-all: $(TARGET)
+.PHONY: all clean syntax-check
 
-$(TARGET): $(SRC)
-	$(CXX) -O2 -o $@ $(SRC) $(LIBS)
+all: $(if $(CROSS_OK),$(TARGET),syntax-check)
+
+$(TARGET): $(SRC) $(WIN_DIR)/win32-stubs.h
+	$(MINGW_CXX) -O2 -I$(WIN_DIR) -o $@ $(SRC) $(LIBS)
+
+syntax-check: $(SRC) $(WIN_DIR)/win32-stubs.h
+	$(HOST_CXX) -fsyntax-only -Wall -std=c++17 -I$(WIN_DIR) $(SRC)
+	@touch $@
 
 clean:
-	rm -f $(TARGET)
+	rm -f $(TARGET) syntax-check

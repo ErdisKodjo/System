@@ -72,6 +72,17 @@ static void skip(const char *name, const char *reason) {
         else fail(name, (expected), _s); \
     } while (0)
 
+/* Variante permissive pour les tests "port-mcu expects NOT_SUPPORTED" :
+ * sur le port host-mock, ces ops retournent SUCCESS (no-op stub plus
+ * permissif que le port x86_64). On accepte donc SUCCESS ou NOT_SUPPORTED
+ * selon le port actif. */
+#define CHECK_STATUS_OR_HOST_MOCK_SUCCESS(name, expected, call) do { \
+        afros_status_t _s = (call); \
+        if (_s == (expected)) pass(name); \
+        else if (AFROS_TEST_HOST_MOCK && _s == AFROS_SUCCESS) pass(name); \
+        else fail(name, (expected), _s); \
+    } while (0)
+
 /* ------------------------------------------------------------------ */
 /*  Pseudo-détection du port actif (pour SKIPs conditionnels)          */
 /* ------------------------------------------------------------------ */
@@ -84,6 +95,23 @@ static void skip(const char *name, const char *reason) {
 #  define AFROS_TEST_HOSTED 1
 #else
 #  define AFROS_TEST_HOSTED 0
+#endif
+
+/* Host-mock port (afros-core/Kernel/ports/port-host-mock/) : port hébergé
+ * qui retourne SUCCESS pour des ops où les ports bare-metal (x86_64, mcu)
+ * retournent NOT_SUPPORTED (set_frequency, migrate_task, compress, ...).
+ * Les tests "port-mcu expects NOT_SUPPORTED" doivent donc accepter SUCCESS
+ * aussi quand AFROS_HOST_MOCK est défini — sinon ils échoueraient sur le
+ * host-mock alors qu'ils passent sur x86_64 hosted.
+ *
+ * AFROS_HOST_MOCK est posé par le CMakeLists.txt du test runner quand
+ * l'option AFROS_HAL_TEST_HOST_MOCK est ON (voir hal/tests/CMakeLists.txt),
+ * ou par -DAFROS_HOST_MOCK=1 sur la ligne gcc directe (voir
+ * scripts/run-hal-tests.sh). */
+#ifdef AFROS_HOST_MOCK
+#  define AFROS_TEST_HOST_MOCK 1
+#else
+#  define AFROS_TEST_HOST_MOCK 0
 #endif
 
 /* ================================================================== */
@@ -159,11 +187,12 @@ static void test_cpu_wakeup_core(void) {
 
 /* Cas tests.md `[ ]` #1 : port-mcu set_frequency() retourne NOT_SUPPORTED.
  * En hébergé (x86_64), le contrat est identique — on valide donc le
- * même comportement. */
+ * même comportement. Sur host-mock, set_frequency retourne SUCCESS
+ * (stub no-op plus permissif), on accepte donc SUCCESS aussi. */
 static void test_cpu_set_frequency_port_mcu_unsupported(void) {
 #if AFROS_TEST_HOSTED
     /* x86_64 hosted : set_frequency retourne NOT_SUPPORTED (cpu_port.c). */
-    CHECK_STATUS("port-mcu set_frequency NOT_SUPPORTED",
+    CHECK_STATUS_OR_HOST_MOCK_SUCCESS("port-mcu set_frequency NOT_SUPPORTED",
                  AFROS_ERROR_NOT_SUPPORTED,
                  arch_cpu_ops.set_frequency(0, 100));
 #else
@@ -172,10 +201,11 @@ static void test_cpu_set_frequency_port_mcu_unsupported(void) {
 #endif
 }
 
-/* Cas tests.md `[ ]` #2 : port-mcu migrate_task() retourne NOT_SUPPORTED. */
+/* Cas tests.md `[ ]` #2 : port-mcu migrate_task() retourne NOT_SUPPORTED.
+ * Sur host-mock, migrate_task retourne SUCCESS (no-op). */
 static void test_cpu_migrate_task_port_mcu_unsupported(void) {
 #if AFROS_TEST_HOSTED
-    CHECK_STATUS("port-mcu migrate_task NOT_SUPPORTED",
+    CHECK_STATUS_OR_HOST_MOCK_SUCCESS("port-mcu migrate_task NOT_SUPPORTED",
                  AFROS_ERROR_NOT_SUPPORTED,
                  arch_cpu_ops.migrate_task(0, 1, 0));
 #else
@@ -268,15 +298,17 @@ static void test_memory_alloc_beyond_limit_port_mcu_no_memory(void) {
 /* Cas tests.md `[ ]` #5 : port-mcu map()/compress() retournent
  * NOT_SUPPORTED. compress() retourne NOT_SUPPORTED sur x86_64 host aussi
  * (memory_port.c x86_64) — on valide ce contrat. map() retourne SUCCESS
- * sur x86_64 (identity map), donc on skippe la partie map() en host. */
+ * sur x86_64 (identity map), donc on skippe la partie map() en host.
+ * Sur host-mock, compress()/decompress() retournent SUCCESS (no-op stub),
+ * on accepte donc SUCCESS aussi. */
 static void test_memory_map_compress_port_mcu_unsupported(void) {
 #if AFROS_TEST_HOSTED
     /* compress() NOT_SUPPORTED sur x86_64 (cf memory_port.c). */
-    CHECK_STATUS("port-mcu compress NOT_SUPPORTED",
+    CHECK_STATUS_OR_HOST_MOCK_SUCCESS("port-mcu compress NOT_SUPPORTED",
                  AFROS_ERROR_NOT_SUPPORTED,
                  arch_memory_ops.compress(0x1000, 4096));
     /* decompress() NOT_SUPPORTED aussi. */
-    CHECK_STATUS("port-mcu decompress NOT_SUPPORTED",
+    CHECK_STATUS_OR_HOST_MOCK_SUCCESS("port-mcu decompress NOT_SUPPORTED",
                  AFROS_ERROR_NOT_SUPPORTED,
                  arch_memory_ops.decompress(0x1000, 4096));
     /* map() retourne SUCCESS sur x86_64 (identity), donc la partie "map()

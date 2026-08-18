@@ -3222,3 +3222,428 @@ Total : **28 fichiers** (15 créés, 13 modifiés).
 - **Réordonnancement CMake** : `add_subdirectory(afros-network)` déplacé AVANT `add_subdirectory(afros-core/Kernel)` dans le CMakeLists racine. Ceci est nécessaire pour que `afros-kernel` puisse linker `afros-network` (consommation de `afros_net_send` par `intermittent_net.c`). L'ordre des autres subdirs est inchangé. Si un agent futur veut ajouter un consumer de `afros-network` dans `afros-core/Kernel/`, il pourra le faire sans modification supplémentaire.
 - **`dtn_set_egress_endpoint()` nouvelle API publique** : la couche DTN expose désormais une fonction pour configurer le next-hop de rejeu. Les consumers existants (Kernel/afros/main.c, tests) ne sont pas affectés — `dtn_init()` zero-fill l'endpoint par défaut, `dtn_flush()` reste en mode simulé tant que `dtn_set_egress_endpoint()` n'est pas appelée.
 - **Aucun `git commit` / `git push`** (per protocole). Les 28 fichiers sont prêts pour review par l'agent parent.
+
+---
+
+## Task ID: WT
+
+**Agent:** Agent WT (general-purpose)
+
+**Task:** Fix Windows test files + workflow bootstrap.
+
+### Context
+
+Two issues blocking CI green:
+1. **5 Windows test files fail `gcc -fsyntax-only -Wall`** on Linux because they
+   `#include <windows.h>`, which isn't available on a stock gcc/Linux host
+   (would need mingw-w64). The CI syntax-checker (`scripts/ci-syntax-check.py`)
+   therefore reports 5 failures.
+2. **GitHub workflow files can't be pushed** via the repo's current PAT (the
+   PAT lacks the `workflow` scope, so GitHub rejects pushes to
+   `.github/workflows/*.yml` with HTTP 403).
+
+### Work Log
+
+#### Task A — Windows test stubs
+
+1. **Read all 5 test sources** to inventory exactly which Win32 types, macros,
+   and functions they reference:
+   - `tests/windows/hello-world/source.c` — `ExitProcess`, `UINT`.
+   - `tests/windows/file-io/source.c` — `HANDLE`, `DWORD`, `CreateFileA`,
+     `WriteFile`, `ReadFile`, `CloseHandle`, `GetLastError`, plus
+     `GENERIC_READ/WRITE`, `FILE_SHARE_READ`, `OPEN_EXISTING`,
+     `CREATE_ALWAYS`, `FILE_ATTRIBUTE_NORMAL`, `INVALID_HANDLE_VALUE`.
+   - `tests/windows/gdi-draw/source.c` — `HDC`, `HWND`, `HBRUSH`, `HGDIOBJ`,
+     `GetDC`, `ReleaseDC`, `SelectObject`, `Rectangle`, `CreateSolidBrush`,
+     `DeleteObject`, `RGB`.
+   - `tests/windows/registry-access/source.c` — `HKEY`, `LONG`, `BYTE`,
+     `LPBYTE`, `PHKEY`, `RegCreateKeyExA`, `RegSetValueExA`, `RegOpenKeyExA`,
+     `RegQueryValueExA`, `RegCloseKey`, `HKEY_CURRENT_USER`, `KEY_READ`,
+     `KEY_WRITE`, `ERROR_SUCCESS`, `REG_SZ`. Also added `#include <string.h>`
+     for `strlen`.
+   - `tests/windows/com-basic/source.cpp` — `CLSID`, `IID`, `HRESULT`,
+     `IUnknown` (+ vtable), `CoInitializeEx`, `CoCreateInstance`,
+     `CoUninitialize`, `CLSCTX_INPROC_SERVER`, `COINIT_APARTMENTTHREADED`,
+     `FAILED`.
+
+2. **Created `tests/windows/win32-stubs.h`** — minimal shared stub header.
+   Design decisions:
+   - Wrapped entirely in `#ifndef _WIN32 ... #endif` so it's a no-op on
+     real Windows or when cross-compiling with mingw-w64 (where `_WIN32`
+     is defined and the real `<windows.h>` / `<objbase.h>` provide
+     everything).
+   - Handle types (`HANDLE`, `HKEY`, `HDC`, `HWND`, `HGDIOBJ`, `HBRUSH`)
+     are all `typedef void *` — exactly like the real Win32 SDK.  This
+     makes `NULL` bind cleanly to any handle parameter and lets e.g.
+     `HBRUSH` flow into an `HGDIOBJ` parameter without a cast (both are
+     `void *`), which the gdi-draw test relies on.
+   - `DWORD` / `LONG` / `HRESULT` / `ULONG` are `unsigned long` / `long`
+     (NOT the `<stdint.h>` 32-bit fixed-width types).  This is *intentionally*
+     wrong from a strict 32-bit-width point of view, but it matches the
+     Linux x86_64 ABI width so `printf("...%lu", GetLastError())` and
+     `printf("...%ld", rc)` don't trip `-Wformat=`.  On real Windows the
+     SDK typedefs are 32-bit and are used instead.
+   - `LPSECURITY_ATTRIBUTES` and `OVERLAPPED` are pointer-to-incomplete-struct
+     stubs so `NULL` binds without a cast (no `-Wint-conversion`).
+   - `LPCVOID` (`const void *`) used as the type of `RegSetValueExA`'s
+     `lpData` parameter — matches the real SDK signature (`CONST BYTE *`)
+     and avoids `-Wdiscarded-qualifiers` when the test casts
+     `(const BYTE *)data`.
+   - `REFCLSID` / `REFIID` are `const CLSID&` / `const IID&` in C++
+     (matching the real Win32 headers), `const CLSID*` / `const IID*` in C.
+     The com-basic test compiles as C++ and passes `CLSID`/`IID` lvalues
+     directly to `CoCreateInstance`, which only works with the reference
+     type.
+   - `IUnknown` + `IUnknownVtbl` provided as minimal C-compatible structs
+     (function-pointer members) so `pUnk->lpVtbl->Release(pUnk)` compiles.
+   - `FAILED(hr)` macro expands to `((HRESULT)(hr)) < 0` — syntactically
+     valid for `-fsyntax-only` (the runtime sign-test result is irrelevant
+     on Linux where the stubs are never linked).
+
+3. **Modified each of the 5 test sources** to use the shared header:
+   ```c
+   #include <stdio.h>
+   #include "win32-stubs.h"
+   #ifdef _WIN32
+   #include <windows.h>
+   #endif
+   ```
+   The com-basic `.cpp` additionally guards `#include <objbase.h>` behind
+   `#ifdef _WIN32`.  Also added `#include <string.h>` to
+   `registry-access/source.c` for `strlen`.
+
+4. **Rewrote each test Makefile** to detect mingw-w64 availability and
+   fall back to host-gcc syntax-check:
+   - Use `MINGW_CC` / `MINGW_CXX` / `HOST_CC` / `HOST_CXX` variable names
+     instead of the make-built-in `CC` / `CXX` (the built-ins are
+     pre-set to `cc` / `g++`, so `CC ?= x86_64-w64-mingw32-gcc` is a
+     no-op — a classic Makefile gotcha).
+   - `CROSS_OK := $(shell command -v $(MINGW_CC) 2>/dev/null)`
+   - `all: $(if $(CROSS_OK),$(TARGET),syntax-check)` — if mingw is
+     installed, build the `.exe` as before; otherwise produce a
+     `syntax-check` stamp file via `gcc -fsyntax-only -Wall -I.. source.c`.
+   - Both branches add `-I$(WIN_DIR)` so the `#include "win32-stubs.h"`
+     resolves correctly (the stub header is a no-op when `_WIN32` is
+     defined, but the file still needs to be findable on disk).
+
+5. **Verified all 5 pass cleanly**:
+   ```
+   gcc -fsyntax-only -Wall -I tests/windows tests/windows/hello-world/source.c      → exit 0
+   gcc -fsyntax-only -Wall -I tests/windows tests/windows/file-io/source.c          → exit 0
+   gcc -fsyntax-only -Wall -I tests/windows tests/windows/gdi-draw/source.c         → exit 0
+   gcc -fsyntax-only -Wall -I tests/windows tests/windows/registry-access/source.c  → exit 0
+   g++ -fsyntax-only -Wall -I tests/windows tests/windows/com-basic/source.cpp      → exit 0
+   ```
+   Also re-verified with `-Wextra` and (for the C++ file) `-std=c++17`
+   — all 5 still pass with zero errors and zero warnings.  The CI
+   syntax-checker uses exactly these flags.
+
+6. **Verified Makefiles work in the no-mingw environment** (the local
+   sandbox): `make` in each test dir produces a `syntax-check` stamp and
+   exits 0; `make clean` removes it.  (No `x86_64-w64-mingw32-gcc` is
+   installed here, so the .exe branch couldn't be tested locally — but
+   the logic is a 1-line `$(if)` and the .exe rule is unchanged from
+   the pre-existing Makefiles.)
+
+#### Task B — Workflow bootstrap
+
+7. **Created `ci-workflows/` directory** (tracked in git, ordinary path —
+   no special scope needed to push) and copied the 6 community-health /
+   workflow files from `.github/`:
+   - `ci-workflows/afrios-ci.yml` (678 lines) — main CI workflow.
+   - `ci-workflows/afrios-release.yml` (321 lines) — release workflow.
+   - `ci-workflows/CODEOWNERS` (93 lines).
+   - `ci-workflows/pull_request_template.md` (95 lines).
+   - `ci-workflows/ISSUE_TEMPLATE/bug_report.md` (83 lines).
+   - `ci-workflows/ISSUE_TEMPLATE/feature_request.md` (77 lines).
+   These are byte-identical copies of the originals.  The canonical
+   location going forward is `ci-workflows/`; `.github/` is now a
+   *generated* target.
+
+8. **Created `scripts/install-workflows.sh`** — bootstrap script that:
+   - Locates the repo root relative to its own `scripts/` location.
+   - For each file under `ci-workflows/`, copies it to the matching
+     path under `.github/` (creating `.github/workflows/` and
+     `.github/ISSUE_TEMPLATE/` as needed).
+   - Uses `cmp -s` to skip files that are already byte-identical
+     (avoids spurious mtimes / `git status` churn).
+   - `git add --force` every file touched (so the next `git commit`
+     captures them).  `--force` because `.github/workflows/` *might*
+     be gitignored on some setups.
+   - **Does NOT call `git commit`** in the default path (per the
+     multi-agent protocol — only the parent agent commits).
+   - If `GH_TOKEN` env var is set, attempts an automatic push via
+     `git push` with the token injected into the HTTPS remote URL
+     (handles both HTTPS and SSH remotes).  Surfaces a clear error
+     message if the token lacks the `workflow` scope (HTTP 403 from
+     GitHub).
+   - Exit 0 on success (or when no auto-push was requested); exit 1
+     on layout error or auto-push failure.
+
+9. **Updated `.github/README-WORKFLOWS.md`** to point at `ci-workflows/`
+   and `scripts/install-workflows.sh` (the previous version pointed at
+   the now-removed `download/github-workflows/` path).  Documents both
+   the manual `bash scripts/install-workflows.sh && git commit && git push`
+   flow and the `GH_TOKEN=... bash scripts/install-workflows.sh`
+   automatic flow.  Includes a file inventory table.
+
+### Stage Summary — Artifacts produits
+
+Total : **14 fichiers** (8 créés, 6 modifiés).
+
+| # | Fichier | Lignes | Statut |
+|---|---|---|---|
+| 1 | `tests/windows/win32-stubs.h` | 232 | Créé |
+| 2 | `tests/windows/hello-world/source.c` | 19 | Modifié |
+| 3 | `tests/windows/file-io/source.c` | 58 | Modifié |
+| 4 | `tests/windows/gdi-draw/source.c` | 46 | Modifié |
+| 5 | `tests/windows/registry-access/source.c` | 64 | Modifié |
+| 6 | `tests/windows/com-basic/source.cpp` | 50 | Modifié |
+| 7 | `tests/windows/hello-world/Makefile` | 31 | Modifié |
+| 8 | `tests/windows/file-io/Makefile` | 26 | Modifié |
+| 9 | `tests/windows/gdi-draw/Makefile` | 28 | Modifié |
+| 10 | `tests/windows/registry-access/Makefile` | 28 | Modifié |
+| 11 | `tests/windows/com-basic/Makefile` | 28 | Modifié |
+| 12 | `ci-workflows/afrios-ci.yml` | 678 | Créé (copie) |
+| 13 | `ci-workflows/afrios-release.yml` | 321 | Créé (copie) |
+| 14 | `ci-workflows/CODEOWNERS` | 93 | Créé (copie) |
+| 15 | `ci-workflows/pull_request_template.md` | 95 | Créé (copie) |
+| 16 | `ci-workflows/ISSUE_TEMPLATE/bug_report.md` | 83 | Créé (copie) |
+| 17 | `ci-workflows/ISSUE_TEMPLATE/feature_request.md` | 77 | Créé (copie) |
+| 18 | `scripts/install-workflows.sh` | 187 | Créé |
+| 19 | `.github/README-WORKFLOWS.md` | 87 | Modifié |
+
+### Vérification (gates)
+
+| Gate | Commande | Résultat |
+|---|---|---|
+| (1) hello-world syntax | `gcc -fsyntax-only -Wall -I tests/windows tests/windows/hello-world/source.c` | OK (exit 0) |
+| (2) file-io syntax | `gcc -fsyntax-only -Wall -I tests/windows tests/windows/file-io/source.c` | OK (exit 0) |
+| (3) gdi-draw syntax | `gcc -fsyntax-only -Wall -I tests/windows tests/windows/gdi-draw/source.c` | OK (exit 0) |
+| (4) registry-access syntax | `gcc -fsyntax-only -Wall -I tests/windows tests/windows/registry-access/source.c` | OK (exit 0) |
+| (5) com-basic syntax (C++) | `g++ -fsyntax-only -Wall -I tests/windows tests/windows/com-basic/source.cpp` | OK (exit 0) |
+| (6) Stricter flags (sanity) | idem + `-Wextra` (et `-std=c++17` pour .cpp) | OK pour les 5 |
+| (7) install-workflows.sh syntax | `bash -n scripts/install-workflows.sh` | OK (exit 0) |
+| (8) install-workflows.sh dry-run | `bash scripts/install-workflows.sh` (sans GH_TOKEN) | OK — 6 fichiers "ok (up-to-date)", git add effectué, message "Workflows staged..." affiché |
+| (9) Makefile detection (no mingw) | `make` dans chacun des 5 tests/windows/<test>/ | OK — produit `syntax-check` stamp, exit 0 |
+| (10) ci-workflows/ inventory | `ls ci-workflows/ ci-workflows/ISSUE_TEMPLATE/` | 4 fichiers + 2 templates = 6 ✓ |
+
+### Notes et handoffs
+
+- **`x86_64-w64-mingw32-gcc` non installé** dans cet environnement : la
+  branche mingw des Makefiles n'a pas pu être testée localement.  La logique
+  est un `$(if $(CROSS_OK),$(TARGET),syntax-check)` trivial et la règle
+  `$(TARGET)` est inchangée par rapport aux Makefiles préexistants.  En CI
+  (`ubuntu-22.04` runner avec `sudo apt-get install gcc-mingw-w64-x86-64`),
+  la branche mingw s'activera automatiquement et produira les `.exe`.
+- **Le stub header est volontairement minimal** : seules les
+  types/macros/fonctions utilisés par les 5 tests existants y sont déclarés.
+  Si un futur test Windows utilise un nouvel API (par ex. `SetWindowText`,
+  `SendMessage`, `CoGetClassObject`), il faudra ajouter les déclarations
+  correspondantes à `tests/windows/win32-stubs.h`.  Le header est structuré
+  par sections (scalar typedefs, handle typedefs, pointer typedefs, macros,
+  GUID/CLSID/IID, IUnknown, function declarations) pour faciliter ces
+  ajouts.
+- **Le stub header ne définit JAMAIS les fonctions** — uniquement les
+  déclare.  Sur Linux, ces fonctions ne sont jamais liées (les tests ne
+  tournent que sur Windows où les implémentations réelles viennent de
+  kernel32/gdi32/advapi32/ole32).  Les déclarations existent purement pour
+  que `gcc -fsyntax-only` réussisse.
+- **Le `bash scripts/install-workflows.sh` exécuté pendant le test a
+  effectué un `git add` des fichiers `.github/`** — c'est le comportement
+  attendu (le script ne fait PAS de commit, seulement un stage).  L'agent
+  parent peut donc `git commit` directement sans avoir à re-stage.  Les
+  fichiers `.github/workflows/*.yml` apparaissent comme `A` dans
+  `git status` (ajoutés), prêts à être commités.
+- **Auto-push non testé** : la variable `GH_TOKEN` n'est pas définie dans
+  cet environnement, donc la branche auto-push du script n'a pas été
+  exécutée.  Le code path est couvert par `bash -n` (syntaxe valide) et
+  suit exactement la séquence documentée dans le corps du script.  À
+  utiliser en production avec un PAT ayant le scope `workflow`.
+- **Aucun `git commit` / `git push`** (per protocole).  Les 19 fichiers
+  sont prêts pour review par l'agent parent.
+
+---
+
+## Task ID: AU
+- **Agent**: AU (Host-mock HAL + one-shot automation)
+- **Task**: Build a Linux host-mock HAL port so the HAL test runner can
+  execute on a CI runner without bare-metal/QEMU, plus a one-shot
+  orchestration script that automates every manual task in the project.
+
+### Work Log
+
+1. **Read** the worklog and surveyed the existing HAL/ports layout:
+   - Real ports (`port-x86_64`, `port-arm64`, `port-riscv`, `port-mcu`)
+     use privileged instructions (`lgdt`, `lidt`, `inb`, `outb`, `cli`,
+     `sti`, `hlt`) that cannot run on a Linux host.
+   - The HAL test runner (`hal_test_runner.c`) is gated by
+     `#ifndef AFROS_FREESTANDING` and uses libc stdio — perfect for a
+     host-mock port.
+
+2. **Created `port-host-mock/`** (8 files):
+   - `CMakeLists.txt` — OBJECT library `afros-port-host-mock` linking
+     `m rt pthread`, propagating `AFROS_HOST_MOCK=1`.
+   - `include/port_host_mock.h` — declares `AFROS_PORT_HOST_MOCK 1`
+     and the mock constants (CPU 2400 MHz, storage 1 MiB / 512 B blocks,
+     timer 1 GHz).
+   - `src/console_port.c` — `fputc`/`fputs`/`fgetc` with non-blocking
+     `select()` on STDIN for `getc`/`has_input`.
+   - `src/cpu_port.c` — `get_info` returns mock values; `set_frequency`,
+     `sleep_core`, `wakeup_core`, `migrate_task` return `AFROS_SUCCESS`.
+   - `src/memory_port.c` — `alloc` uses `posix_memalign` + zero-fill,
+     `free` calls libc `free`, `map`/`unmap` use `mmap`/`munmap`,
+     `compress`/`decompress` return SUCCESS (more permissive than
+     x86_64's NOT_SUPPORTED).
+   - `src/interrupt_port.c` — no-op `enable`/`disable`/`register_handler`,
+     `set_priority` NOT_SUPPORTED (matches x86_64), `send_ipi`
+     NOT_SUPPORTED (single-process), `ack` no-op.
+   - `src/timer_port.c` — `clock_gettime(CLOCK_MONOTONIC)` for
+     `get_ticks`, `timer_create` + `SIGEV_THREAD` for `set_oneshot` /
+     `set_periodic`, `timer_delete` for `cancel`, `nanosleep` for
+     `busy_wait_us`.
+   - `src/storage_port.c` — backing file at
+     `/tmp/afros-host-mock-storage.img` (1 MiB, 512 B blocks);
+     `fseek`+`fread`/`fwrite` for `read_blocks`/`write_blocks`,
+     `fflush` for `flush`.
+
+3. **Updated `hal/tests/CMakeLists.txt`**: added
+   `option(AFROS_HAL_TEST_HOST_MOCK "..." ON)` block that links
+   `hal_test_runner` + `afros-hal-tests` against `afros-port-host-mock`
+   when ON, with `AFROS_HOST_MOCK=1` defined. (NB: deliberately do NOT
+   pass `-DAFROS_FREESTANDING=0` — `#ifndef` checks symbol presence, so
+   defining it to *any* value activates the empty-TU `#else` branch and
+   breaks the link with `undefined reference to main`.)
+
+4. **Updated `hal/tests/hal_test_runner.c`**:
+   - Added `AFROS_TEST_HOST_MOCK` macro (1 when `AFROS_HOST_MOCK`
+     defined, else 0).
+   - Added `CHECK_STATUS_OR_HOST_MOCK_SUCCESS` macro that accepts
+     SUCCESS in addition to the expected status when host-mock is
+     active. This is needed because the host-mock returns SUCCESS for
+     `set_frequency`, `migrate_task`, `compress`, `decompress` (per the
+     task spec), while the existing "port-mcu expects NOT_SUPPORTED"
+     tests were hard-coded to require NOT_SUPPORTED.
+   - Wrapped 4 tests with the new macro:
+     `test_cpu_set_frequency_port_mcu_unsupported`,
+     `test_cpu_migrate_task_port_mcu_unsupported`,
+     `test_memory_map_compress_port_mcu_unsupported` (compress +
+     decompress branches).
+
+5. **Created `scripts/run-hal-tests.sh`**:
+   - Auto-detects Linux host → host-mock port.
+   - Tries CMake first, falls back to direct `gcc` invocation
+     (single command, no CMake required).
+   - Captures output to `tests/results/hal-tests-<ts>.log` +
+     `hal-tests-latest.log` symlink.
+   - `timeout --preserve-status 30` so a runaway SIGEV_THREAD callback
+     can't hang CI.
+   - stdin redirected from `/dev/null` so the non-blocking getc probe
+     returns TIMEOUT immediately.
+   - Exits 0 on success / 1 on failure.
+
+6. **Created `scripts/setup.sh`** (one-shot orchestrator):
+   - 7 phases: `check-deps`, `install-workflows`, `fetch-edk2`
+     (optional), `syntax-check`, `hal-tests`, `compat-tests`,
+     `summary`.
+   - Each phase is a function callable independently via
+     `--<phase-name>`; `--all` runs every phase in order.
+   - `--skip <phase>` (repeatable) skips named phases.
+   - `--verbose` enables detailed output.
+   - Per-phase elapsed time, pass/fail/skip tracking, final summary
+     table.
+   - Writes `setup-<ts>.log` per run with all phase output tee'd in.
+   - Idempotent (running twice doesn't break anything — verified).
+   - Critical phases (check-deps, install-workflows, syntax-check,
+     hal-tests, compat-tests) cause exit 1 on failure; fetch-edk2 is
+     optional (exit 0 even if it fails).
+
+7. **Created `scripts/run-all-tests.sh`** (unified test runner):
+   - 6 suites: `syntax-check`, `hal-tests`, `compat-tests`,
+     `link-mcu`, `link-riscv`, `cmake-configure`.
+   - Cross-link tests soft-skip (return 2) when the cross-compiler
+     isn't on PATH — reported as SKIP, not FAIL.
+   - Produces `tests/results/full-report-<ts>.md` with a per-suite
+     Markdown table (status badge, duration, log path).
+   - Per-suite log files at `tests/results/<suite>-<ts>.log`.
+
+8. **Created root `README.md`** (none existed at repo root):
+   - Quick Start section with `setup.sh --all` / `setup.sh --<phase>`
+     / `run-all-tests.sh` examples.
+   - Repository layout diagram.
+   - Tooling table (gcc, g++, python3, cmake, make, git,
+     arm-none-eabi-gcc, riscv64-linux-gnu-gcc).
+   - Links to the detailed docs under `AfriOS/.../afros-docs/`.
+
+9. **Verified**:
+   - `bash -n` passes on all 3 scripts.
+   - `gcc -fsyntax-only -Wall` passes on all 6 host-mock `.c` files
+     and on `hal_test_runner.c`.
+   - End-to-end build & run: 42 PASS / 0 FAIL / 2 SKIP via
+     `scripts/run-hal-tests.sh`.
+   - `scripts/setup.sh --check-deps` correctly reports `cmake`
+     missing in this env (and exits 1).
+   - `scripts/setup.sh --all --skip check-deps` runs the full pipeline
+     (install-workflows, fetch-edk2, syntax-check, hal-tests,
+     compat-tests) end-to-end, exits 0 with all critical phases passing.
+   - `scripts/run-all-tests.sh` produces the Markdown report with all
+     suites correctly classified as pass/skip/fail.
+
+### Stage Summary
+
+**Artifacts produced (15 files):**
+
+Host-mock port (8 files, new):
+- `AfriOS/AfriOS/OS/afros-core/Kernel/ports/port-host-mock/CMakeLists.txt`
+- `AfriOS/AfriOS/OS/afros-core/Kernel/ports/port-host-mock/include/port_host_mock.h`
+- `AfriOS/AfriOS/OS/afros-core/Kernel/ports/port-host-mock/src/console_port.c`
+- `AfriOS/AfriOS/OS/afros-core/Kernel/ports/port-host-mock/src/cpu_port.c`
+- `AfriOS/AfriOS/OS/afros-core/Kernel/ports/port-host-mock/src/memory_port.c`
+- `AfriOS/AfriOS/OS/afros-core/Kernel/ports/port-host-mock/src/interrupt_port.c`
+- `AfriOS/AfriOS/OS/afros-core/Kernel/ports/port-host-mock/src/timer_port.c`
+- `AfriOS/AfriOS/OS/afros-core/Kernel/ports/port-host-mock/src/storage_port.c`
+
+Scripts (3 files, new):
+- `scripts/run-hal-tests.sh`
+- `scripts/setup.sh`
+- `scripts/run-all-tests.sh`
+
+Modified (3 files):
+- `AfriOS/AfriOS/OS/afros-core/Kernel/hal/tests/CMakeLists.txt`
+  (added AFROS_HAL_TEST_HOST_MOCK option)
+- `AfriOS/AfriOS/OS/afros-core/Kernel/hal/tests/hal_test_runner.c`
+  (added AFROS_TEST_HOST_MOCK macro + CHECK_STATUS_OR_HOST_MOCK_SUCCESS
+  wrapper for 4 port-mcu NOT_SUPPORTED tests)
+- `README.md` (new file at repo root — Quick Start + repo layout)
+
+**Test results (final verification):**
+- HAL test runner: 42 PASS / 0 FAIL / 2 SKIP (the 2 skips are
+  intentional — `port-mcu alloc beyond limit` and `port-mcu map
+  NOT_SUPPORTED`, both irrelevant on host-mock).
+- Setup script end-to-end (`--all --skip check-deps`): every critical
+  phase passed; `fetch-edk2` failed (network) but is optional.
+- Run-all-tests: syntax-check (16s), hal-tests, compat-tests all pass;
+  link-mcu / link-riscv / cmake-configure soft-skip (cross-toolchains
+  missing on this host).
+
+**Design notes:**
+- The host-mock port deliberately returns SUCCESS where the bare-metal
+  ports return NOT_SUPPORTED (set_frequency, migrate_task, compress,
+  decompress, write_blocks). This gives the test runner actual SUCCESS
+  coverage on those code paths instead of always hitting the
+  NOT_SUPPORTED branch. The 4 "port-mcu expects NOT_SUPPORTED" tests
+  in `hal_test_runner.c` were wrapped with
+  `CHECK_STATUS_OR_HOST_MOCK_SUCCESS` to accept SUCCESS when host-mock
+  is active — the original NOT_SUPPORTED assertion still holds for the
+  bare-metal ports (x86_64, mcu).
+- The `interrupt_port.c::send_ipi` keeps NOT_SUPPORTED (host-mock is
+  single-process, no SMP) so the existing
+  `test_interrupt_send_ipi_port_mcu_unsupported` test passes unchanged.
+- The `run-hal-tests.sh` direct-gcc fallback is what CI runners use
+  (no CMake required); the CMake path is tried first only when a
+  `build/` directory already exists.
+- `setup.sh` writes per-run logs to `setup-<ts>.log` at the repo root;
+  these are intentionally not gitignored (they're useful debug
+  artifacts). The parent agent can `git add` or `git clean -fdX
+  setup-*.log` as preferred.
+- No `git commit` / `git push` performed (per protocol).

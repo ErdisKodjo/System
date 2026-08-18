@@ -6,7 +6,10 @@
  * Valide CreateFile/WriteFile/ReadFile/CloseHandle dans afros-winbridge.
  */
 #include <stdio.h>
+#include "win32-stubs.h"
+#ifdef _WIN32
 #include <windows.h>
+#endif
 
 #define TEST_FILE "test.txt"
 #define TEST_DATA "Hello, AfriOS!"
