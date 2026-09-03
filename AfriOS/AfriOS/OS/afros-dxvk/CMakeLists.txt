@@ -1,3 +1,6 @@
+cmake_minimum_required(VERSION 3.16)
+project(afrosdxvk LANGUAGES C CXX ASM)
+
 # CMakeLists.txt for afros-dxvk
 # =============================================================================
 # afros-dxvk is the AfriOS DirectX -> Vulkan translation layer, modelled on

@@ -1,3 +1,6 @@
+cmake_minimum_required(VERSION 3.16)
+project(afroswinbridge LANGUAGES C CXX ASM)
+
 # CMakeLists.txt for afros-winbridge
 # =============================================================================
 # afros-winbridge is AfriOS's Windows compatibility layer (a stripped-down,

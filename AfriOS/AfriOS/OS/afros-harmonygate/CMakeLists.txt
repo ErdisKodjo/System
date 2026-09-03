@@ -1,3 +1,6 @@
+cmake_minimum_required(VERSION 3.16)
+project(afrosharmonygate LANGUAGES C CXX ASM)
+
 # CMakeLists.txt for afros-harmonygate
 # =============================================================================
 # afros-harmonygate is AfriOS's HarmonyOS compatibility layer. It is shipped

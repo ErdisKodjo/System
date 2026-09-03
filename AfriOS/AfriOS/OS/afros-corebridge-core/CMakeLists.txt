@@ -1,3 +1,6 @@
+cmake_minimum_required(VERSION 3.16)
+project(afroscorebridgecore LANGUAGES C CXX ASM)
+
 # CMakeLists.txt for afros-corebridge-core
 # =============================================================================
 # afros-corebridge is the AfriOS "central manager": it detects incoming

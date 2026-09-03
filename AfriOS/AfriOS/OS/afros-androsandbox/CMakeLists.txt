@@ -1,3 +1,6 @@
+cmake_minimum_required(VERSION 3.16)
+project(afrosandrosandbox LANGUAGES C CXX ASM)
+
 # CMakeLists.txt for afros-androsandbox
 # =============================================================================
 # afros-androsandbox is the AfriOS Android-side compatibility runtime: it

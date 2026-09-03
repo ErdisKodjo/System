@@ -1,0 +1,239 @@
+{
+  "build_timestamp": "20260903-142759",
+  "build_dir": "/home/z/my-project/System/build",
+  "totals": {
+    "artifacts": 25,
+    "libraries": 10,
+    "total_size_bytes": 5070626,
+    "hal_tests_pass": 42,
+    "hal_tests_fail": 0,
+    "hal_tests_skip": 2
+  },
+  "artifacts": [
+    {
+      "path": "compat/afros-corebridge-core/CMakeFiles/Makefile2",
+      "name": "Makefile2",
+      "module": "CMakeFiles",
+      "kind": "executable",
+      "size_bytes": 4606,
+      "sha256": "54f5957f2ae31f8d1d7638b4dc76d2eb11244aee18aaa6b26c94c6c83029947b",
+      "mtime": "2026-09-03T14:23:23.473549"
+    },
+    {
+      "path": "compat/afros-harmonygate/CMakeFiles/Makefile2",
+      "name": "Makefile2",
+      "module": "CMakeFiles",
+      "kind": "executable",
+      "size_bytes": 4620,
+      "sha256": "feb53471733385324267e9c7aec99c9bb95c6fc1186f95a20d1e1cd5180b4804",
+      "mtime": "2026-09-03T14:23:23.401549"
+    },
+    {
+      "path": "compat/afros-winbridge/CMakeFiles/Makefile2",
+      "name": "Makefile2",
+      "module": "CMakeFiles",
+      "kind": "executable",
+      "size_bytes": 4622,
+      "sha256": "44b78a2faf2d0849e33ea722b826f6c7d27baee9dcbdce9f0ecb05957eba23ff",
+      "mtime": "2026-09-03T14:23:23.389549"
+    },
+    {
+      "path": "compat/afros-dxvk/CMakeFiles/Makefile2",
+      "name": "Makefile2",
+      "module": "CMakeFiles",
+      "kind": "executable",
+      "size_bytes": 4408,
+      "sha256": "19da977d7b43d7f55de03d6c39ac060e3b5bb1e39f5f30fe59d95b70dc28808f",
+      "mtime": "2026-09-03T14:23:23.302549"
+    },
+    {
+      "path": "compat/afros-incompat-engine/CMakeFiles/Makefile2",
+      "name": "Makefile2",
+      "module": "CMakeFiles",
+      "kind": "executable",
+      "size_bytes": 4754,
+      "sha256": "d2e80beed0e4024d5d842bba7becf3186f75dcfa44d1c5beab835142402f6299",
+      "mtime": "2026-09-03T14:26:45.528393"
+    },
+    {
+      "path": "compat/afros-androsandbox/CMakeFiles/Makefile2",
+      "name": "Makefile2",
+      "module": "CMakeFiles",
+      "kind": "executable",
+      "size_bytes": 4748,
+      "sha256": "62de4a12ca95d22c075ce11a061a275b383d0cc35b92798fa6b50f0bf579b7a8",
+      "mtime": "2026-09-03T14:23:23.374549"
+    },
+    {
+      "path": "compat/afros-androsandbox/Makefile",
+      "name": "Makefile",
+      "module": "afros-androsandbox",
+      "kind": "executable",
+      "size_bytes": 57228,
+      "sha256": "5d5b7ff70c08e4a60d3079711c3cc84f79340a8839aadc2e1faf3fabe22f217f",
+      "mtime": "2026-09-03T14:23:23.373549"
+    },
+    {
+      "path": "compat/afros-corebridge-core/Makefile",
+      "name": "Makefile",
+      "module": "afros-corebridge-core",
+      "kind": "executable",
+      "size_bytes": 34755,
+      "sha256": "4af5a04fba2472dd49b50e9a30f05a19daad118c195cd66befc7e7183b0a5432",
+      "mtime": "2026-09-03T14:23:23.473549"
+    },
+    {
+      "path": "compat/afros-dxvk/Makefile",
+      "name": "Makefile",
+      "module": "afros-dxvk",
+      "kind": "executable",
+      "size_bytes": 36131,
+      "sha256": "8b8ef946a9a30a980be2abf65624ed5e1ad7fd7c74d19472556942b4c7373234",
+      "mtime": "2026-09-03T14:23:23.302549"
+    },
+    {
+      "path": "compat/afros-harmonygate/Makefile",
+      "name": "Makefile",
+      "module": "afros-harmonygate",
+      "kind": "executable",
+      "size_bytes": 44074,
+      "sha256": "9f114619d42095de3589a4a0c23aec5eeceb96c50208034e2132d5f9ba832c61",
+      "mtime": "2026-09-03T14:23:23.400549"
+    },
+    {
+      "path": "compat/afros-incompat-engine/Makefile",
+      "name": "Makefile",
+      "module": "afros-incompat-engine",
+      "kind": "executable",
+      "size_bytes": 37854,
+      "sha256": "02fa397848f19d7633764027c7bf82227f60d9c954e4daaf2b2e3204a93c18e0",
+      "mtime": "2026-09-03T14:26:45.528393"
+    },
+    {
+      "path": "compat/afros-winbridge/Makefile",
+      "name": "Makefile",
+      "module": "afros-winbridge",
+      "kind": "executable",
+      "size_bytes": 47706,
+      "sha256": "f61f4ee40eeeeed62cb126ed64b148ebe8e42ded3fc449bea2158c1cf446ccba",
+      "mtime": "2026-09-03T14:23:23.388549"
+    },
+    {
+      "path": "hal-tests/hal_test_runner",
+      "name": "hal_test_runner",
+      "module": "hal-tests",
+      "kind": "executable",
+      "size_bytes": 31088,
+      "sha256": "4f3e0a41007b5fa73ccc7ecc420e07fecf275881a6546be8bf3da7f81aad3945",
+      "mtime": "2026-09-03T14:16:45.282888"
+    },
+    {
+      "path": "tests/fork-exec",
+      "name": "fork-exec",
+      "module": "tests",
+      "kind": "executable",
+      "size_bytes": 16368,
+      "sha256": "eca1e96b61d6d0e11bc102af1d471b2ceabf7fae6381db67e721c568ea1b25df",
+      "mtime": "2026-09-03T14:27:09.869495"
+    },
+    {
+      "path": "tests/hello-elf",
+      "name": "hello-elf",
+      "module": "tests",
+      "kind": "executable",
+      "size_bytes": 15952,
+      "sha256": "4296ad5cf072debe85a1ea22e124bd7e7e36591d651ca6412de15b7b2aa8b449",
+      "mtime": "2026-09-03T14:27:09.868495"
+    },
+    {
+      "path": "compat/afros-androsandbox/libafros-androsandbox.so",
+      "name": "libafros-androsandbox.so",
+      "module": "afros-androsandbox",
+      "kind": "shared_lib",
+      "size_bytes": 1737776,
+      "sha256": "1b39f518453db0a6da1e8b5bb8113bc9a2dcb771a6b6ff5fe62134519efb1028",
+      "mtime": "2026-09-03T14:23:52.799672"
+    },
+    {
+      "path": "compat/afros-dxvk/d3d11.dll.so",
+      "name": "d3d11.dll.so",
+      "module": "afros-dxvk",
+      "kind": "shared_lib",
+      "size_bytes": 444048,
+      "sha256": "432469232e4c85efeb8c99fbc3a98b4b2fc29022d5e0f55edb09cc9f4dee756a",
+      "mtime": "2026-09-03T14:23:47.901651"
+    },
+    {
+      "path": "compat/afros-dxvk/d3d12.dll.so",
+      "name": "d3d12.dll.so",
+      "module": "afros-dxvk",
+      "kind": "shared_lib",
+      "size_bytes": 444048,
+      "sha256": "432469232e4c85efeb8c99fbc3a98b4b2fc29022d5e0f55edb09cc9f4dee756a",
+      "mtime": "2026-09-03T14:23:47.901651"
+    },
+    {
+      "path": "compat/afros-dxvk/d3d9.dll.so",
+      "name": "d3d9.dll.so",
+      "module": "afros-dxvk",
+      "kind": "shared_lib",
+      "size_bytes": 444048,
+      "sha256": "432469232e4c85efeb8c99fbc3a98b4b2fc29022d5e0f55edb09cc9f4dee756a",
+      "mtime": "2026-09-03T14:23:47.901651"
+    },
+    {
+      "path": "compat/afros-dxvk/dxgi.dll.so",
+      "name": "dxgi.dll.so",
+      "module": "afros-dxvk",
+      "kind": "shared_lib",
+      "size_bytes": 444048,
+      "sha256": "432469232e4c85efeb8c99fbc3a98b4b2fc29022d5e0f55edb09cc9f4dee756a",
+      "mtime": "2026-09-03T14:23:47.901651"
+    },
+    {
+      "path": "compat/afros-dxvk/libafros-dxvk.so",
+      "name": "libafros-dxvk.so",
+      "module": "afros-dxvk",
+      "kind": "shared_lib",
+      "size_bytes": 444048,
+      "sha256": "432469232e4c85efeb8c99fbc3a98b4b2fc29022d5e0f55edb09cc9f4dee756a",
+      "mtime": "2026-09-03T14:23:47.901651"
+    },
+    {
+      "path": "compat/afros-harmonygate/libafros-harmonygate.so",
+      "name": "libafros-harmonygate.so",
+      "module": "afros-harmonygate",
+      "kind": "shared_lib",
+      "size_bytes": 394640,
+      "sha256": "7380239a3fed63bc23cb1511dea1aafa38b0926d3971d47711f666de61e29b1b",
+      "mtime": "2026-09-03T14:23:42.277628"
+    },
+    {
+      "path": "compat/afros-incompat-engine/libafros-incompat-engine.so",
+      "name": "libafros-incompat-engine.so",
+      "module": "afros-incompat-engine",
+      "kind": "shared_lib",
+      "size_bytes": 111576,
+      "sha256": "51275b52dbef6f903a5de3c2ca55427e091283e4793312fa4a0c851a229ee712",
+      "mtime": "2026-09-03T14:26:46.251396"
+    },
+    {
+      "path": "compat/afros-winbridge/libafros-winbridge.so",
+      "name": "libafros-winbridge.so",
+      "module": "afros-winbridge",
+      "kind": "shared_lib",
+      "size_bytes": 106176,
+      "sha256": "41c50e924c8b9aee6db2079db56940e342d0accd4554f88c1f41f07112c0dc5a",
+      "mtime": "2026-09-03T14:23:39.179615"
+    },
+    {
+      "path": "compat/afros-corebridge-core/libafros-corebridge.a",
+      "name": "libafros-corebridge.a",
+      "module": "afros-corebridge-core",
+      "kind": "static_lib",
+      "size_bytes": 151304,
+      "sha256": "ee0021a5125af6328b47388e77f2cb40886dbc8cadcea8fa1cc2ab5478519d65",
+      "mtime": "2026-09-03T14:23:38.145611"
+    }
+  ]
+}

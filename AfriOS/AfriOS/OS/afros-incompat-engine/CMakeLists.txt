@@ -1,3 +1,6 @@
+cmake_minimum_required(VERSION 3.16)
+project(afrosincompatengine LANGUAGES C CXX ASM)
+
 # CMakeLists.txt for afros-incompat-engine
 # =============================================================================
 # afros-incompat-engine is AfriOS's Apple-platform compatibility layer,
@@ -138,23 +141,21 @@ if(AFROS_HOST_HAS_OBJC)
         OUTPUT_NAME "afros-incompat-engine"
     )
 else()
-    # Fallback path: the host compiler has no objc frontend. Tag the .m files
-    # as C with `-x objective-c` so configure still succeeds; the user will
-    # see a single clear "cc1obj: No such file" error at build time, which
-    # tells them they need to install clang or gobjc.
+    # Fallback path: the host compiler has no objc frontend. We exclude the
+    # .m files from the build entirely — the library will still contain all
+    # the C-only components (Mach-O loader, objc runtime C, sandbox, codesign,
+    # darling kernel, CoreGraphics). The .m framework wrappers (UIKit,
+    # Foundation, CoreAnimation, AVFoundation) require clang or gobjc to
+    # build. Users who need full iOS/macOS framework support must install
+    # one of those compilers.
     message(WARNING
         "afros-incompat-engine: the host C compiler (${CMAKE_C_COMPILER}) "
         "cannot build Objective-C sources. The .m files in frameworks/ "
-        "will be compiled as C with `-x objective-c`; install clang or "
-        "gobjc to actually build them.")
-
-    set_source_files_properties(${AFROS_INCOMPAT_ENGINE_OBJC_SOURCES} PROPERTIES
-        LANGUAGE C
-        COMPILE_OPTIONS "-x;objective-c")
+        "ARE EXCLUDED from this build. Install clang or gobjc to build "
+        "the full library with UIKit/Foundation/CoreAnimation frameworks.")
 
     add_library(afros-incompat-engine SHARED
         ${AFROS_INCOMPAT_ENGINE_C_SOURCES}
-        ${AFROS_INCOMPAT_ENGINE_OBJC_SOURCES}
     )
 
     set_target_properties(afros-incompat-engine PROPERTIES
