@@ -85,19 +85,24 @@ if(AFROS_BUILD_RUNTIME)
     add_subdirectory(afros-corebridge-core)
 endif()
 
-add_subdirectory(afros-storage)
-add_subdirectory(afros-power-management)
-add_subdirectory(afros-winbridge)
-add_subdirectory(afros-sdk)
-add_subdirectory(afros-package-manager)
-add_subdirectory(afros-incompat-engine)
-add_subdirectory(afros-harmonygate)
-add_subdirectory(afros-babelbridge-core)
-add_subdirectory(afros-infrastructure)
-add_subdirectory(common)
+# Userspace modules that depend on libc (stdio.h, sys/socket.h, etc.) are
+# skipped in freestanding mode — they can't compile with arm-none-eabi-gcc.
+# Only the kernel + HAL + drivers + port are built for MCU.
+if(NOT AFROS_FREESTANDING)
+    add_subdirectory(afros-storage)
+    add_subdirectory(afros-power-management)
+    add_subdirectory(afros-winbridge)
+    add_subdirectory(afros-sdk)
+    add_subdirectory(afros-package-manager)
+    add_subdirectory(afros-incompat-engine)
+    add_subdirectory(afros-harmonygate)
+    add_subdirectory(afros-babelbridge-core)
+    add_subdirectory(afros-infrastructure)
+    add_subdirectory(common)
 
-# Applications
-add_subdirectory(apps/demo_app)
+    # Applications
+    add_subdirectory(apps/demo_app)
+endif()
 
 if(AFROS_BUILD_GRAPHICS)
     # add_subdirectory(afros-dxvk)
