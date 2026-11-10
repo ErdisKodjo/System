@@ -5,12 +5,22 @@
  * @brief x86_64 Interrupt operations implementation
  */
 
+/*
+ * External reference to the IDT descriptor defined in cpu_port.c.
+ * In freestanding mode, lidt loads the interrupt descriptor table.
+ * In hosted mode, we skip the privileged instruction.
+ */
+struct idt_desc_t { uint16_t limit; uint64_t base; };
+extern const struct idt_desc_t idt_descriptor;
+
 static afros_status_t interrupt_init_impl(void) {
+#ifdef AFROS_FREESTANDING
     __asm__ volatile (
         "cli\n\t"
         "lidt idt_descriptor\n\t"
         "sti\n\t"
     );
+#endif
     return AFROS_SUCCESS;
 }
 

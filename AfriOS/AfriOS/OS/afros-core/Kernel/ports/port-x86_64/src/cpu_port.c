@@ -5,12 +5,33 @@
  * @brief x86_64 CPU operations implementation
  */
 
+/*
+ * GDT/IDT descriptor struct (used by lgdt/lidt). In a real bare-metal kernel
+ * this would be defined in an early boot assembly file. For the hosted
+ * simulation build we provide a dummy definition so the linker resolves the
+ * symbol — the lgdt/lidt instructions are never actually executed in
+ * userspace (they'd fault), but the inline asm must compile and link.
+ */
+__attribute__((aligned(16)))
+const struct {
+    uint16_t limit;
+    uint64_t base;
+} idt_descriptor = { 0, 0 };
+
 static afros_status_t cpu_init_impl(void) {
+    /*
+     * In a real bare-metal kernel, this would load the GDT. In the hosted
+     * simulation build we skip the privileged instruction — userspace can't
+     * execute lgdt anyway (it would SIGSEGV). The asm is kept for syntax
+     * but wrapped in #ifdef so it's only emitted in freestanding mode.
+     */
+#ifdef AFROS_FREESTANDING
     __asm__ volatile (
         "cli\n\t"
         "lgdt idt_descriptor\n\t"
         "sti\n\t"
     );
+#endif
     return AFROS_SUCCESS;
 }
 

@@ -49,7 +49,12 @@ target_link_libraries(afros-kernel PUBLIC afros-hal)
 # racine (afros-network est un "leaf" qui ne dépend que de afros-hal, via
 # le repli include-dir si afros-hal n'existe pas encore à ce point).
 # On ne link que si afros-network a bien été défini (build partiel).
-if(TARGET afros-network)
+#
+# IMPORTANT : afros-network utilise <sys/socket.h> (BSD sockets) qui n'existe
+# pas en mode freestanding (port-mcu). On exclut donc afros-network du build
+# MCU — intermittent_net.c a un fallback qui retourne AFROS_ERROR_NOT_SUPPORTED
+# quand afros_net_send n'est pas lié.
+if(TARGET afros-network AND NOT AFROS_FREESTANDING)
     target_link_libraries(afros-kernel PUBLIC afros-network)
 endif()
 
