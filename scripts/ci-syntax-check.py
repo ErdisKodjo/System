@@ -71,6 +71,14 @@ EXCLUDE_DIRS = {
     "edk2",                       # upstream EDK2 sources (huge, vendored)
     "prebuilts",                  # prebuilt binaries
     ".venv", "venv",
+    # tests/ios and tests/harmonyos contain test sources that #import system
+    # frameworks (<Foundation/Foundation.h>, <UIKit/UIKit.h>, <QuartzCore/…>)
+    # only available on macOS / iOS with Xcode. On a Linux CI runner these
+    # would always fail with "fatal error: … No such file or directory".
+    # The other platform test dirs (windows/, android/, linux/) ship their
+    # own stubs and are still checked.
+    "ios",                        # tests/ios/* — needs Apple SDK headers
+    "harmonyos",                  # tests/harmonyos/* — needs HarmonyOS SDK
 }
 
 # Individual files that should be skipped (relative to repo root). These are
@@ -158,11 +166,14 @@ def collect_include_paths(root: Path) -> list[str]:
     # Add test-specific stub directories so cross-compilation test sources
     # (e.g. Windows tests that need win32-stubs.h on a Linux host) can resolve
     # their stub headers during syntax-check.
+    #
+    # NOTE: tests/ios and tests/harmonyos are NOT included here — they contain
+    # no host-side stubs, only real sources that #import Apple / HarmonyOS SDK
+    # headers (which are absent on a Linux CI runner). The whole `ios` and
+    # `harmonyos` sub-trees are pruned by EXCLUDE_DIRS above.
     test_stubs = [
         root / "tests" / "windows",       # win32-stubs.h
         root / "tests" / "android",       # android stubs (if any)
-        root / "tests" / "ios",           # iOS stubs (if any)
-        root / "tests" / "harmonyos",     # HarmonyOS stubs (if any)
     ]
     for stub in test_stubs:
         if stub.is_dir():

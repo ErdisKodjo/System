@@ -132,6 +132,16 @@ if(AFROS_HOST_HAS_OBJC)
         ${AFROS_INCOMPAT_ENGINE_OBJC_SOURCES}
     )
 
+    # -std=gnu11 is mandatory for the .m files: UIView.m (and others) use
+    # `for (NSUInteger i = 0; …)` loop initial declarations, which are only
+    # legal in C99 or C11 mode. Some gcc/gobjc builds default to gnu89 and
+    # fail with "error: 'for' loop initial declarations are only allowed in
+    # C99 or C11 mode". OBJC_STANDARD=11 alone is not always honoured by
+    # every CMake release, so we add the flag explicitly via COMPILE_OPTIONS
+    # as well.
+    target_compile_options(afros-incompat-engine PRIVATE
+        $<$<COMPILE_LANGUAGE:C,CXX,OBJC>:-std=gnu11>)
+
     set_target_properties(afros-incompat-engine PROPERTIES
         C_STANDARD 11
         CXX_STANDARD 17
@@ -157,6 +167,13 @@ else()
     add_library(afros-incompat-engine SHARED
         ${AFROS_INCOMPAT_ENGINE_C_SOURCES}
     )
+
+    # Even in the C-only fallback we need gnu11 — some C sources use the
+    # same `for` loop initial declarations as the .m files. C_STANDARD=11
+    # alone is occasionally ignored by older CMake/gcc combos, so the
+    # explicit -std=gnu11 below is belt-and-braces.
+    target_compile_options(afros-incompat-engine PRIVATE
+        $<$<COMPILE_LANGUAGE:C,CXX>:-std=gnu11>)
 
     set_target_properties(afros-incompat-engine PROPERTIES
         C_STANDARD 11

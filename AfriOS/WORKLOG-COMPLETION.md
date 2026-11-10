@@ -2481,7 +2481,7 @@ Task: Créer une suite de tests de compatibilité mesurant la compatibilité
 réelle d'AfriOS avec les applications des 5 plateformes supportées
 (Windows, Android, iOS/macOS, HarmonyOS, Linux natif).
 
-### Work Log
+Work Log:
 
 1. **Lecture du worklog** (`worklog.md`) pour le contexte des autres
    agents — notamment Agent FD (dépendances externes + `scripts/fetch-deps.sh`)
@@ -2618,7 +2618,7 @@ Tests additionnels effectués :
 - Build artifacts et rapports générés nettoyés après tests (via `make
   clean` et `rm tests/results/{results,report}-*.md`).
 
-### Stage Summary — Artifacts produits
+Stage Summary:
 
 Total : **75 fichiers**, ~1005 lignes pour les 3 livrables principaux
 (harness + orchestrator + README) + ~2000 lignes de sources de tests
@@ -2710,7 +2710,7 @@ Task: Geler l'API publique de l'orchestrateur AfriOS CoreBridge et
 établir un processus de gouvernance (RFC + semver) pour les évolutions
 futures. 8 livrables dans `afros-corebridge-core/`.
 
-## Work Log
+Work Log:
 
 ### 0. Lecture du contexte existant
 
@@ -2911,7 +2911,7 @@ Tests additionnels :
   `afros-corebridge-core/{src,include,API.md,CHANGELOG.md}` ne les
   référence — pas de cassage hors scope.
 
-## Stage Summary — Artifacts produits
+Stage Summary:
 
 Total : **8 fichiers** (6 créés, 2 mis à jour) + 1 répertoire créé
 (`rfcs/`).

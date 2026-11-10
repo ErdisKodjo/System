@@ -11,6 +11,8 @@
 
 #include <stdlib.h>
 
+@class CAAnimation;
+
 @protocol CAAnimationDelegate <NSObject>
 @optional
 - (void)animationDidStart:(CAAnimation *)anim;
