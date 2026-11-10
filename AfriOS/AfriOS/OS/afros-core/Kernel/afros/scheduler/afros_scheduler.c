@@ -1,6 +1,35 @@
 #include "afros_hal.h"
 #include "kprintf.h"
+
+#ifdef AFROS_FREESTANDING
+/* Freestanding replacements for string.h functions */
+static void *afros_memset(void *dst, int c, unsigned long n) {
+    unsigned char *d = (unsigned char *)dst;
+    while (n--) *d++ = (unsigned char)c;
+    return dst;
+}
+static unsigned long afros_strlen(const char *s) {
+    const char *p = s;
+    while (*p) p++;
+    return (unsigned long)(p - s);
+}
+static int afros_strncmp(const char *a, const char *b, unsigned long n) {
+    while (n && *a && *a == *b) { a++; b++; n--; }
+    return n ? (unsigned char)*a - (unsigned char)*b : 0;
+}
+static char *afros_strncpy(char *dst, const char *src, unsigned long n) {
+    char *d = dst;
+    while (n && *src) { *d++ = *src++; n--; }
+    while (n--) *d++ = '\0';
+    return dst;
+}
+#define memset afros_memset
+#define strlen afros_strlen
+#define strncmp afros_strncmp
+#define strncpy afros_strncpy
+#else
 #include <string.h>
+#endif
 
 /**
  * @file afros_scheduler.c
