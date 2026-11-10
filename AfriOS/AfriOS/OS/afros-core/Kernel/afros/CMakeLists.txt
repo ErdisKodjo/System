@@ -67,6 +67,13 @@ endif()
 if(NOT AFROS_PORT STREQUAL "mcu")
     add_executable(afros-kernel-sim main.c)
     target_link_libraries(afros-kernel-sim PRIVATE afros-kernel afros-hal afros-drivers afros-port)
+    # x86_64 port uses `lgdt idt_descriptor` inline asm which requires non-PIE.
+    # ARM64/RISC-V don't have this issue but -no-pie is harmless and produces
+    # a simpler binary for bare-metal-ish simulation.
+    if(AFROS_PORT STREQUAL "x86_64")
+        target_compile_options(afros-kernel-sim PRIVATE -fno-pie -fno-pic)
+        target_link_options(afros-kernel-sim PRIVATE -no-pie)
+    endif()
 else()
     message(STATUS "AFROS_PORT=mcu : afros-kernel-sim non construit (port bare-metal, pas de runtime hébergé).")
 endif()

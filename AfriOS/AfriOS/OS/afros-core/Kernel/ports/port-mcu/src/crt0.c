@@ -59,8 +59,10 @@ void crt0_init(void) {
     for (;;) {
 #if defined(__arm__) || defined(__thumb__)
         __asm__ volatile ("wfi");   /* Wait For Interrupt (Cortex-M) */
+#elif defined(__x86_64__)
+        __asm__ volatile ("hlt");   /* x86 halt */
 #else
-        __asm__ volatile ("hlt");   /* Repli x86 pour la syntaxe-check cross-build */
+        __asm__ volatile ("wfi");   /* RISC-V / AArch64 fallback */
 #endif
     }
 }

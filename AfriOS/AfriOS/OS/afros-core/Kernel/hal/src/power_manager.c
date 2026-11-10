@@ -5,6 +5,7 @@
 
 #include "afros_types.h"
 #include "../include/power_manager.h"
+#include "afros_cpu_idle.h"
 #include <stdint.h>
 #include <stdbool.h>
 
@@ -134,6 +135,6 @@ afros_status_t power_set_performance_mode(uint32_t level) {
 // Architecture-specific idle function
 void arch_idle(void) {
     if (g_cpu_idle_enabled) {
-        __asm__ volatile ("hlt" ::: "memory");
+        afros_cpu_halt();
     }
 }

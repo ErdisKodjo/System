@@ -1,4 +1,5 @@
 #include "afros_hal.h"
+#include "afros_cpu_idle.h"
 
 /**
  * @file hal_init.c
@@ -51,19 +52,19 @@ static afros_status_t hal_init_impl(void) {
 static afros_status_t hal_reset_impl(void) {
     arch_console_ops.puts("[HAL] System reset requested\r\n");
     /* CPU reset not yet implemented in port */
-    while (1) { __asm__ volatile ("hlt"); }
+    while (1) { afros_cpu_halt(); }
 }
 
 static afros_status_t hal_shutdown_impl(void) {
     arch_console_ops.puts("[HAL] System shutdown requested\r\n");
     /* CPU shutdown not yet implemented in port */
-    while (1) { __asm__ volatile ("hlt"); }
+    while (1) { afros_cpu_halt(); }
 }
 
 static afros_status_t hal_suspend_impl(void) {
     arch_console_ops.puts("[HAL] System suspend requested\r\n");
     /* CPU suspend not yet implemented in port */
-    while (1) { __asm__ volatile ("hlt"); }
+    while (1) { afros_cpu_halt(); }
 }
 
 static afros_status_t hal_resume_impl(void) {
