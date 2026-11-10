@@ -11,7 +11,7 @@
 
 #include <stdlib.h>
 
-@class AVAsset, AVPlayerItem;
+@class AVAsset, AVPlayerItem, AVPlayer;
 
 @protocol AVPlayerDelegate <NSObject>
 @optional

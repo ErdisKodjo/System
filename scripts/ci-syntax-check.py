@@ -55,7 +55,7 @@ EXT_RULES = {
     ".h":   ("gcc", "c",                  ["-Wall", "-Wextra"]),
     ".cpp": ("g++", "c++",                ["-Wall", "-Wextra", "-std=c++17"]),
     ".cc":  ("g++", "c++",                ["-Wall", "-Wextra", "-std=c++17"]),
-    ".m":   ("gcc", "objective-c",        ["-Wall", "-Wextra"]),
+    ".m":   ("gcc", "objective-c",        ["-Wall", "-Wextra", "-std=gnu11"]),
     ".S":   ("gcc", "assembler-with-cpp", ["-Wall"]),
 }
 
@@ -294,7 +294,7 @@ def _resolve_rule(path: Path, rule: tuple) -> tuple:
         if kind == "c++":
             return ("g++", "c++", ["-Wall", "-Wextra", "-std=c++17"])
         if kind == "objective-c":
-            return ("gcc", "objective-c", ["-Wall", "-Wextra"])
+            return ("gcc", "objective-c", ["-Wall", "-Wextra", "-std=gnu11"])
     return rule
 
 
