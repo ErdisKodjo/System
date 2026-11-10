@@ -69,7 +69,7 @@ enable_testing()
 # afros-network entièrement en mode freestanding — intermittent_net.c a un
 # fallback qui retourne AFROS_ERROR_NOT_SUPPORTED quand afros_net_send n'est
 # pas lié.
-if(NOT AFROS_FREESTANDING)
+if(NOT AFROS_FREESTANDING AND NOT CMAKE_CROSSCOMPILING)
     add_subdirectory(afros-network)
 endif()
 
@@ -77,18 +77,19 @@ if(AFROS_BUILD_KERNEL)
     add_subdirectory(afros-core/Kernel)
 endif()
 
-if(AFROS_BUILD_ANDROID)
+if(AFROS_BUILD_ANDROID AND NOT CMAKE_CROSSCOMPILING)
     add_subdirectory(afros-androsandbox)
 endif()
 
-if(AFROS_BUILD_RUNTIME)
+if(AFROS_BUILD_RUNTIME AND NOT CMAKE_CROSSCOMPILING)
     add_subdirectory(afros-corebridge-core)
 endif()
 
 # Userspace modules that depend on libc (stdio.h, sys/socket.h, etc.) are
-# skipped in freestanding mode — they can't compile with arm-none-eabi-gcc.
-# Only the kernel + HAL + drivers + port are built for MCU.
-if(NOT AFROS_FREESTANDING)
+# skipped in freestanding mode AND in cross-compilation mode. When
+# cross-compiling for arm64/riscv/mcu, only the kernel + HAL + drivers +
+# port are needed — the compat layers are built separately for the host.
+if(NOT AFROS_FREESTANDING AND NOT CMAKE_CROSSCOMPILING)
     add_subdirectory(afros-storage)
     add_subdirectory(afros-power-management)
     add_subdirectory(afros-winbridge)

@@ -3,10 +3,14 @@
 # et afros-hal-tests : bare-metal, pas de runtime hébergé pour exécuter un
 # binaire de test classique.
 #
-# Étape P1 : ajout de `hal_test_runner.c` — runner unifié qui couvre tous les
-# cas `[ ]` de tests.md plus les cas génériques (HAL init/deinit, CPU/memory/
-# timer/console/storage/device ops). Lié à afros-hal + afros-port, tourne
-# sur host en mode libc stdio.
+# IMPORTANT : les tests HAL ne sont construits QUE pour le port host-mock
+# (tests CI sur Linux host). En cross-compilation (arm64, riscv, mcu), les
+# tests ne peuvent pas s'exécuter sur le host et le target afros-port-host-mock
+# n'existe pas — on skippe donc entièrement.
+if(NOT AFROS_PORT STREQUAL "host-mock")
+    message(STATUS "AFROS_PORT=${AFROS_PORT} : hal/tests non construits (cross-compile, port-host-mock requis).")
+    return()
+endif()
 
 # 1. Smoke test original (étape 5) — couverture minimale historique.
 add_executable(afros-hal-tests hal_smoke_test.c)
@@ -36,15 +40,9 @@ add_test(NAME hal_test COMMAND hal_test_runner)
 # privilégiées lgdt/lidt/inb/outb et ne tournera pas sur un Linux host).
 option(AFROS_HAL_TEST_HOST_MOCK
        "Build HAL tests with the host-mock port (no bare-metal required)" ON)
-if(AFROS_HAL_TEST_HOST_MOCK)
-    # Override the afros-port link from above: when host-mock is on, the
-    # test runner links against the host-mock OBJECT library instead of the
-    # bare-metal afros-port. We use PRIVATE so the bare-metal afros-port
-    # (if it was already linked) is shadowed by the host-mock definitions
-    # of arch_console_ops / arch_cpu_ops / etc.
+if(AFROS_HAL_TEST_HOST_MOCK AND TARGET afros-port-host-mock)
     target_link_libraries(hal_test_runner PRIVATE afros-port-host-mock afros-hal)
     target_compile_definitions(hal_test_runner PRIVATE AFROS_HOST_MOCK=1)
-    # Same for the smoke test so both stay consistent.
     target_link_libraries(afros-hal-tests PRIVATE afros-port-host-mock afros-hal)
     target_compile_definitions(afros-hal-tests PRIVATE AFROS_HOST_MOCK=1)
 endif()
