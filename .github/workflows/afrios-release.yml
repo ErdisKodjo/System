@@ -76,12 +76,16 @@ jobs:
 
       - name: Configure + build
         run: |
-          cmake -B build -S "${AFROS_OS_ROOT}" -G Ninja \
+          # Use absolute paths for both the source tree and the toolchain
+          # file so CMake resolves them regardless of the current working
+          # directory. `${{ github.workspace }}` is the repo root on the
+          # runner (set by actions/checkout).
+          cmake -B build -S "${{ github.workspace }}/${AFROS_OS_ROOT}" -G Ninja \
                 -DCMAKE_BUILD_TYPE=Release \
                 -DAFROS_PORT=${{ matrix.arch }} \
                 -DAFROS_BUILD_KERNEL=ON \
                 -DAFROS_BUILD_TESTS=OFF \
-                -DCMAKE_TOOLCHAIN_FILE="${AFROS_OS_ROOT}/cmake/toolchains/toolchain-${{ matrix.arch }}.cmake" \
+                -DCMAKE_TOOLCHAIN_FILE="${{ github.workspace }}/${AFROS_OS_ROOT}/cmake/toolchains/toolchain-${{ matrix.arch }}.cmake" \
                 -DCMAKE_C_COMPILER_LAUNCHER=ccache \
                 -DCMAKE_CXX_COMPILER_LAUNCHER=ccache
           cmake --build build -j"$(nproc)"
