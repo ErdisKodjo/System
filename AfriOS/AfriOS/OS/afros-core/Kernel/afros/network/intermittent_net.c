@@ -9,9 +9,8 @@
 #ifdef AFROS_FREESTANDING
 /* En mode freestanding (port-mcu), afros-network n'est pas compilé (pas de
  * <sys/socket.h>). On stub afros_net_send et le type endpoint pour que
- * intermittent_net.c compile et link. */
-typedef unsigned int uint32_t;
-typedef unsigned short uint16_t;
+ * intermittent_net.c compile et link. Les types uint32_t/uint16_t viennent
+ * déjà de <stdint.h> via afros_types.h. */
 #define AFROS_SUCCESS 0
 #define AFROS_ERROR_NOT_SUPPORTED 4
 typedef struct {
