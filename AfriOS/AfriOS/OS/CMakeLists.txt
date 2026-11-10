@@ -40,6 +40,14 @@ if(AFROS_ENABLE_LTO)
     set(CMAKE_C_FLAGS   "${CMAKE_C_FLAGS}   -flto")
 endif()
 
+# Auto-enable AFROS_FREESTANDING for the MCU port — must be done HERE (before
+# any add_subdirectory) so that downstream CMakeLists (afros-network, hal, etc.)
+# can check AFROS_FREESTANDING to skip libc-dependent code.
+# This mirrors the logic in afros-core/Kernel/CMakeLists.txt but runs earlier.
+if(AFROS_BUILD_KERNEL AND AFROS_PORT STREQUAL "mcu" AND NOT DEFINED AFROS_FREESTANDING)
+    set(AFROS_FREESTANDING ON CACHE BOOL "Build the kernel freestanding (no libc)" FORCE)
+endif()
+
 # Enable testing
 enable_testing()
 
@@ -52,7 +60,15 @@ enable_testing()
 # est construit avec le repli include-dir-only, et le link symbol-level se
 # résout au moment où afros-kernel-sim ou afros-hal-tests est lié (les deux
 # bibliothèques sont alors disponibles dans le link set).
-add_subdirectory(afros-network)
+#
+# IMPORTANT : afros-network utilise <sys/socket.h> (BSD sockets) qui n'existe
+# pas en mode freestanding (port-mcu avec arm-none-eabi-gcc). On saute donc
+# afros-network entièrement en mode freestanding — intermittent_net.c a un
+# fallback qui retourne AFROS_ERROR_NOT_SUPPORTED quand afros_net_send n'est
+# pas lié.
+if(NOT AFROS_FREESTANDING)
+    add_subdirectory(afros-network)
+endif()
 
 if(AFROS_BUILD_KERNEL)
     add_subdirectory(afros-core/Kernel)
