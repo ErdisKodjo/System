@@ -8,12 +8,20 @@
  * bare-metal tant qu'aucun driver réseau n'est branché. */
 #ifdef AFROS_FREESTANDING
 /* En mode freestanding (port-mcu), afros-network n'est pas compilé (pas de
- * <sys/socket.h>). On stub afros_net_send pour que intermittent_net.c link. */
+ * <sys/socket.h>). On stub afros_net_send et le type endpoint pour que
+ * intermittent_net.c compile et link. */
 typedef unsigned int uint32_t;
 typedef unsigned short uint16_t;
 #define AFROS_SUCCESS 0
 #define AFROS_ERROR_NOT_SUPPORTED 4
-static int afros_net_send(const void *ep, const unsigned char *data, unsigned short len) {
+typedef struct {
+    uint32_t src_ip;
+    uint16_t src_port;
+    uint32_t dst_ip;
+    uint16_t dst_port;
+    int proto;
+} afros_net_endpoint_t;
+static int afros_net_send(const afros_net_endpoint_t *ep, const unsigned char *data, unsigned short len) {
     (void)ep; (void)data; (void)len;
     return AFROS_ERROR_NOT_SUPPORTED;
 }
