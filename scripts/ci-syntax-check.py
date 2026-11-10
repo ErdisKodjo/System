@@ -79,6 +79,10 @@ EXCLUDE_DIRS = {
     # own stubs and are still checked.
     "ios",                        # tests/ios/* — needs Apple SDK headers
     "harmonyos",                  # tests/harmonyos/* — needs HarmonyOS SDK
+    # Vendored external dependencies (darling, wine, art, edk2, etc.) — their
+    # headers conflict with system headers (e.g. darling provides a macOS
+    # <pwd.h> that breaks Linux source compilation). Never scan external/.
+    "external",
 }
 
 # Individual files that should be skipped (relative to repo root). These are
