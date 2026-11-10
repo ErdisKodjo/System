@@ -44,8 +44,11 @@ endif()
 # any add_subdirectory) so that downstream CMakeLists (afros-network, hal, etc.)
 # can check AFROS_FREESTANDING to skip libc-dependent code.
 # This mirrors the logic in afros-core/Kernel/CMakeLists.txt but runs earlier.
-if(AFROS_BUILD_KERNEL AND AFROS_PORT STREQUAL "mcu" AND NOT DEFINED AFROS_FREESTANDING)
+# Note: we check "NOT AFROS_FREESTANDING" (not "NOT DEFINED") because the
+# option() above already defines it to OFF by default.
+if(AFROS_BUILD_KERNEL AND AFROS_PORT STREQUAL "mcu" AND NOT AFROS_FREESTANDING)
     set(AFROS_FREESTANDING ON CACHE BOOL "Build the kernel freestanding (no libc)" FORCE)
+    message(STATUS "Auto-enabled AFROS_FREESTANDING for MCU port")
 endif()
 
 # Enable testing
